@@ -10,4 +10,6 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+candid.workspace = true
+ic-cdk.workspace = true
 sign_in_with_email.path = "../api"
