@@ -1,0 +1,11 @@
+{
+  "canisters": {
+    "sign_in_with_email": {
+      "type": "custom",
+      "candid": "canister/api/can.did",
+      "wasm": "wasms/sign_in_with_email.wasm.gz",
+      "build":  "scripts/build-wasm.sh"
+    }
+  },
+  "version": 1
+}
