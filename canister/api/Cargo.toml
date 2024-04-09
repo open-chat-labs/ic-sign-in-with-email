@@ -1,5 +1,5 @@
 [package]
-name = "sign_in_with_email"
+name = "sign_in_with_email_canister"
 version = "0.1.0"
 edition = "2021"
 

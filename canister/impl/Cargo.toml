@@ -1,5 +1,5 @@
 [package]
-name = "sign_in_with_email_impl"
+name = "sign_in_with_email_canister_impl"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,4 +12,8 @@ crate-type = ["cdylib"]
 [dependencies]
 candid.workspace = true
 ic-cdk.workspace = true
-sign_in_with_email.path = "../api"
+ic-cdk-timers.workspace = true
+ic-stable-structures.workspace = true
+rmp-serde.workspace = true
+serde.workspace = true
+sign_in_with_email_canister.path = "../api"

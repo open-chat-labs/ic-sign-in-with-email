@@ -1,1 +1,29 @@
-service : {}
+type Delegation = record { pubkey : blob; expiration : nat64 };
+type GenerateVerificationCodeArgs = record { email : text };
+type GenerateVerificationCodeResponse = variant { EmailInvalid; Success };
+type GetDelegationArgs = record { session_key : blob; expiration : nat64 };
+type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
+type SignedDelegation = record { signature : blob; delegation : Delegation };
+type SubmitVerificationCodeArgs = record {
+  session_key : blob;
+  code : text;
+  max_time_to_live : opt nat64;
+};
+type SubmitVerificationCodeResponse = variant {
+  CodeInvalid;
+  NotFound;
+  Success : SubmitVerificationCodeSuccess;
+};
+type SubmitVerificationCodeSuccess = record {
+  user_key : blob;
+  expiration : nat64;
+};
+service : (record {}) -> {
+  generate_verification_code : (GenerateVerificationCodeArgs) -> (
+      GenerateVerificationCodeResponse,
+    );
+  get_delegation : (GetDelegationArgs) -> (GetDelegationResponse) query;
+  submit_verification_code : (SubmitVerificationCodeArgs) -> (
+      SubmitVerificationCodeResponse,
+    );
+}

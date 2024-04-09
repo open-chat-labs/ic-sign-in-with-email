@@ -5,7 +5,7 @@ SCRIPT_DIR=$(dirname "$SCRIPT")
 cd $SCRIPT_DIR/..
 
 CANISTER_NAME="sign_in_with_email"
-PACKAGE="${CANISTER_NAME}_impl"
+PACKAGE="${CANISTER_NAME}_canister_impl"
 
 if [ -z "${CARGO_HOME}" ]
 then

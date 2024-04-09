@@ -11,6 +11,7 @@ pub use updates::*;
 
 pub type Milliseconds = u64;
 pub type Nanoseconds = u64;
+pub type TimestampMillis = u64;
 pub type TimestampNanos = u64;
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]

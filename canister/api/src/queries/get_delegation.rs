@@ -3,14 +3,14 @@ use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct Args {
+pub struct GetDelegationArgs {
     #[serde(with = "serde_bytes")]
     pub session_key: Vec<u8>,
     pub expiration: TimestampNanos,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub enum Response {
+pub enum GetDelegationResponse {
     Success(SignedDelegation),
     NotFound,
 }
