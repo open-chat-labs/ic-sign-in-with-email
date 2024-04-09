@@ -4,6 +4,7 @@ use serde::Serialize;
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct SubmitVerificationCodeArgs {
+    pub email: String,
     pub code: String,
     #[serde(with = "serde_bytes")]
     pub session_key: Vec<u8>,
@@ -13,7 +14,7 @@ pub struct SubmitVerificationCodeArgs {
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum SubmitVerificationCodeResponse {
     Success(SubmitVerificationCodeSuccess),
-    CodeInvalid,
+    IncorrectCode,
     NotFound,
 }
 

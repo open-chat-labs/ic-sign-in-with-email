@@ -1,7 +1,7 @@
 use crate::state;
 use crate::state::State;
-use sign_in_with_email_canister::InitArgs;
 use ic_cdk::init;
+use sign_in_with_email_canister::InitArgs;
 use std::time::Duration;
 
 #[init]

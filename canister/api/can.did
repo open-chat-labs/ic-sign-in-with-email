@@ -1,18 +1,27 @@
 type Delegation = record { pubkey : blob; expiration : nat64 };
 type GenerateVerificationCodeArgs = record { email : text };
-type GenerateVerificationCodeResponse = variant { EmailInvalid; Success };
-type GetDelegationArgs = record { session_key : blob; expiration : nat64 };
+type GenerateVerificationCodeResponse = variant {
+  Blocked : nat64;
+  EmailInvalid;
+  Success;
+};
+type GetDelegationArgs = record {
+  session_key : blob;
+  email : text;
+  expiration : nat64;
+};
 type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
 type SignedDelegation = record { signature : blob; delegation : Delegation };
 type SubmitVerificationCodeArgs = record {
   session_key : blob;
   code : text;
+  email : text;
   max_time_to_live : opt nat64;
 };
 type SubmitVerificationCodeResponse = variant {
-  CodeInvalid;
   NotFound;
   Success : SubmitVerificationCodeSuccess;
+  IncorrectCode;
 };
 type SubmitVerificationCodeSuccess = record {
   user_key : blob;

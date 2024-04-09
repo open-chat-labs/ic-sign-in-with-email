@@ -1,10 +1,15 @@
+use crate::NANOS_PER_MILLISECOND;
 use candid::Principal;
 use sign_in_with_email_canister::TimestampMillis;
 
-pub fn time() -> TimestampMillis {
-    ic_cdk::api::time() / 1_000_000
+pub fn now() -> TimestampMillis {
+    now_nanos() / NANOS_PER_MILLISECOND
 }
 
-pub fn caller() -> Principal {
-    ic_cdk::caller()
+pub fn now_nanos() -> TimestampMillis {
+    ic_cdk::api::time()
+}
+
+pub fn canister_id() -> Principal {
+    ic_cdk::id()
 }
