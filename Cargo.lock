@@ -478,6 +478,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "email_sender_aws"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "email_sender_core",
+]
+
+[[package]]
+name = "email_sender_core"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+]
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1787,6 +1802,8 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "canister_sig_util",
+ "email_sender_aws",
+ "email_sender_core",
  "getrandom",
  "ic-cdk 0.13.2",
  "ic-cdk-timers",

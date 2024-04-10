@@ -1,5 +1,6 @@
 use sign_in_with_email_canister::{Milliseconds, Nanoseconds};
 
+mod email_sender;
 mod env;
 mod guards;
 mod hash;

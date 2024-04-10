@@ -1,7 +1,7 @@
 use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
 use crate::model::salt::Salt;
 use crate::model::verification_codes::{CheckVerificationCodeError, VerificationCodes};
-use crate::{env, rng, Hash, DEFAULT_EXPIRATION_PERIOD, MAX_EXPIRATION_PERIOD};
+use crate::{env, Hash, DEFAULT_EXPIRATION_PERIOD, MAX_EXPIRATION_PERIOD};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
@@ -24,7 +24,6 @@ pub struct State {
     #[serde(skip)]
     signature_map: SignatureMap,
     salt: Salt,
-    rng_seed: [u8; 32],
 }
 
 const STATE_ALREADY_INITIALIZED: &str = "State has already been initialized";
@@ -58,29 +57,22 @@ impl State {
             verification_codes: VerificationCodes::default(),
             signature_map: SignatureMap::default(),
             salt: Salt::default(),
-            rng_seed: [0; 32],
         }
+    }
+
+    pub fn salt(&self) -> [u8; 32] {
+        self.salt.get()
     }
 
     pub fn set_salt(&mut self, salt: [u8; 32]) {
         self.salt.set(salt);
-        self.rng_seed = salt;
-        rng::set_seed(salt);
     }
 
-    pub fn rng_seed(&self) -> [u8; 32] {
-        self.rng_seed
-    }
-
-    pub fn recalculate_rng_seed(&mut self) {
-        self.rng_seed = rng::gen();
-    }
-
-    pub fn generate_verification_code(
+    pub fn store_verification_code(
         &mut self,
         email: String,
+        code: String,
     ) -> GenerateVerificationCodeResponse {
-        let code = rng::generate_verification_code();
         let now = env::now();
 
         match self.verification_codes.push(email, code, now) {

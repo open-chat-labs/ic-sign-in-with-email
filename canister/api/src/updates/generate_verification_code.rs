@@ -12,4 +12,5 @@ pub enum GenerateVerificationCodeResponse {
     Success,
     Blocked(TimestampMillis),
     EmailInvalid,
+    FailedToSendEmail(String),
 }

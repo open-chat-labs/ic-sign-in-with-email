@@ -12,6 +12,8 @@ crate-type = ["cdylib"]
 [dependencies]
 candid.workspace = true
 canister_sig_util.workspace = true
+email_sender_aws = { path = "../../email_sender/aws", optional = true }
+email_sender_core.path = "../../email_sender/core"
 getrandom.workspace = true
 ic-cdk.workspace = true
 ic-cdk-timers.workspace = true
@@ -23,3 +25,6 @@ serde.workspace = true
 serde_bytes.workspace = true
 sha2.workspace = true
 sign_in_with_email_canister.path = "../api"
+
+[features]
+aws = ["email_sender_aws"]

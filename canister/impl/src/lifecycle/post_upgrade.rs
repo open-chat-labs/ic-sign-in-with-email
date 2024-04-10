@@ -1,7 +1,7 @@
 use crate::lifecycle::READER_WRITER_BUFFER_SIZE;
 use crate::memory::get_upgrades_memory;
 use crate::state::State;
-use crate::{rng, state};
+use crate::{env, rng, state};
 use ic_cdk::post_upgrade;
 use ic_stable_structures::reader::{BufferedReader, Reader};
 use serde::Deserialize;
@@ -13,7 +13,10 @@ fn post_upgrade() {
     let mut deserializer = rmp_serde::Deserializer::new(reader);
 
     let state = State::deserialize(&mut deserializer).unwrap();
-    rng::set_seed(state.rng_seed());
+    rng::set_seed(state.salt(), env::now());
 
     state::init(state);
+
+    #[cfg(feature = "email_sender_aws")]
+    crate::email_sender::init(email_sender_aws::AwsEmailSender {});
 }

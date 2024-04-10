@@ -2,6 +2,8 @@
 members = [
     "canister/api",
     "canister/impl",
+    "email_sender/aws",
+    "email_sender/core",
     "integration_tests"
 ]
 resolver = "2"
@@ -9,6 +11,7 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
+async-trait = "0.1.79"
 candid = "0.10.6"
 canister_sig_util = { git = "https://github.com/dfinity/internet-identity", rev = "cdf3ffd7358d775e1da31183abe2b54383187579" }
 getrandom = { version = "0.2.14", features = ["custom"] }

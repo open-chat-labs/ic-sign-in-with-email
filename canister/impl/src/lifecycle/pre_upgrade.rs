@@ -11,7 +11,6 @@ fn pre_upgrade() {
     let writer = BufferedWriter::new(READER_WRITER_BUFFER_SIZE, Writer::new(&mut memory, 0));
     let mut serializer = rmp_serde::Serializer::new(writer).with_struct_map();
 
-    let mut state = state::take();
-    state.recalculate_rng_seed();
+    let state = state::take();
     state.serialize(&mut serializer).unwrap()
 }

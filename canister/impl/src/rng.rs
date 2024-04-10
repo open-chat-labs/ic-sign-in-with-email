@@ -1,13 +1,17 @@
 use rand::distributions::{Distribution, Standard};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use sign_in_with_email_canister::TimestampMillis;
 use std::cell::RefCell;
 
 thread_local! {
     static RNG: RefCell<Option<StdRng>> = RefCell::default();
 }
 
-pub fn set_seed(seed: [u8; 32]) {
+pub fn set_seed(salt: [u8; 32], now: TimestampMillis) {
+    let mut seed = salt;
+    seed[..8].copy_from_slice(&now.to_be_bytes());
+
     RNG.set(Some(StdRng::from_seed(seed)));
 }
 
