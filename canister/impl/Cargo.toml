@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 [dependencies]
 candid.workspace = true
 canister_sig_util.workspace = true
+getrandom.workspace = true
 ic-cdk.workspace = true
 ic-cdk-timers.workspace = true
 ic-certification.workspace = true

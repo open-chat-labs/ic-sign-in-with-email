@@ -13,7 +13,7 @@ fn post_upgrade() {
     let mut deserializer = rmp_serde::Deserializer::new(reader);
 
     let state = State::deserialize(&mut deserializer).unwrap();
-    rng::set(state.rng_seed());
+    rng::set_seed(state.rng_seed());
 
     state::init(state);
 }

@@ -65,7 +65,7 @@ impl State {
     pub fn set_salt(&mut self, salt: [u8; 32]) {
         self.salt.set(salt);
         self.rng_seed = salt;
-        rng::set(salt);
+        rng::set_seed(salt);
     }
 
     pub fn rng_seed(&self) -> [u8; 32] {

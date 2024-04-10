@@ -7,7 +7,7 @@ thread_local! {
     static RNG: RefCell<Option<StdRng>> = RefCell::default();
 }
 
-pub fn set(seed: [u8; 32]) {
+pub fn set_seed(seed: [u8; 32]) {
     RNG.set(Some(StdRng::from_seed(seed)));
 }
 

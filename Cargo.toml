@@ -2,6 +2,7 @@
 members = [
     "canister/api",
     "canister/impl",
+    "integration_tests"
 ]
 resolver = "2"
 
@@ -10,12 +11,17 @@ resolver = "2"
 [workspace.dependencies]
 candid = "0.10.6"
 canister_sig_util = { git = "https://github.com/dfinity/internet-identity", rev = "cdf3ffd7358d775e1da31183abe2b54383187579" }
+getrandom = { version = "0.2.14", features = ["custom"] }
+ic-agent = "0.34.0"
 ic-cdk = "0.13.2"
 ic-cdk-timers = "0.7.0"
 ic-certification = "2.5.0"
 ic-stable-structures = "0.6.3"
+pocket-ic = "2.1.0"
 rand = "0.8.5"
+ring = "0.17.8"
 rmp-serde = "1.1.2"
 serde = "1.0.197"
 serde_bytes = "0.11.14"
 sha2 = "0.10.8"
+test-case = "3.3.1"
