@@ -7,12 +7,12 @@ pub struct InitOrUpgradeArgs {
     pub email_sender_config: Option<EmailSenderConfig>,
 }
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub enum EmailSenderConfig {
     Aws(AwsEmailSenderConfig),
 }
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct AwsEmailSenderConfig {
     pub region: String,
     pub target_arn: String,

@@ -7,9 +7,9 @@ use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GenerateVerificationCodeResponse, GetDelegationArgs, GetDelegationResponse,
-    Nanoseconds, SignedDelegation, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
-    SubmitVerificationCodeSuccess,
+    Delegation, EmailSenderConfig, GenerateVerificationCodeResponse, GetDelegationArgs,
+    GetDelegationResponse, Nanoseconds, SignedDelegation, SubmitVerificationCodeArgs,
+    SubmitVerificationCodeResponse, SubmitVerificationCodeSuccess,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -23,6 +23,7 @@ pub struct State {
     verification_codes: VerificationCodes,
     #[serde(skip)]
     signature_map: SignatureMap,
+    email_sender_config: EmailSenderConfig,
     salt: Salt,
 }
 
@@ -52,12 +53,21 @@ pub fn take() -> State {
 }
 
 impl State {
-    pub fn new() -> State {
+    pub fn new(email_sender_config: EmailSenderConfig) -> State {
         State {
             verification_codes: VerificationCodes::default(),
             signature_map: SignatureMap::default(),
+            email_sender_config,
             salt: Salt::default(),
         }
+    }
+
+    pub fn email_sender_config(&self) -> &EmailSenderConfig {
+        &self.email_sender_config
+    }
+
+    pub fn set_email_sender_config(&mut self, config: EmailSenderConfig) {
+        self.email_sender_config = config;
     }
 
     pub fn salt(&self) -> [u8; 32] {

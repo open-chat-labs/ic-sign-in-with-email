@@ -6,11 +6,12 @@ use std::time::Duration;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {
-    state::init(State::new());
+    let email_sender_config = args
+        .email_sender_config
+        .expect("Email sender config not provided");
 
-    if let Some(config) = args.email_sender_config {
-        crate::email_sender::init(config);
-    }
+    crate::email_sender::init(email_sender_config.clone());
+    state::init(State::new(email_sender_config));
 
     if let Some(salt) = args.salt {
         state::mutate(|s| s.set_salt(salt));

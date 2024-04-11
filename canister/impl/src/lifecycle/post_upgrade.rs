@@ -13,12 +13,13 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     let reader = BufferedReader::new(READER_WRITER_BUFFER_SIZE, Reader::new(&memory, 0));
     let mut deserializer = rmp_serde::Deserializer::new(reader);
 
-    let state = State::deserialize(&mut deserializer).unwrap();
+    let mut state = State::deserialize(&mut deserializer).unwrap();
     rng::set_seed(state.salt(), env::now());
 
-    state::init(state);
-
     if let Some(config) = args.email_sender_config {
-        crate::email_sender::init(config);
+        state.set_email_sender_config(config);
     }
+
+    crate::email_sender::init(state.email_sender_config().clone());
+    state::init(state);
 }
