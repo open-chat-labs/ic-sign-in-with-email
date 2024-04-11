@@ -9,7 +9,8 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use sign_in_with_email_canister::{
     GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, InitArgs, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    GetDelegationResponse, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
+    SubmitVerificationCodeResponse,
 };
 use std::fs::File;
 use std::io::Read;
@@ -32,7 +33,10 @@ fn end_to_end_success() {
     let TestEnv {
         mut env,
         canister_id,
-    } = install_canister(Some(InitArgs { salt: Some(salt) }));
+    } = install_canister(Some(InitOrUpgradeArgs {
+        salt: Some(salt),
+        email_sender_config: None,
+    }));
 
     let sender = random_principal();
     let email = "blah@blah.com";
@@ -85,11 +89,14 @@ fn end_to_end_success() {
     ));
 }
 
-fn install_canister(init_args: Option<InitArgs>) -> TestEnv {
+fn install_canister(init_args: Option<InitOrUpgradeArgs>) -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let init_args = init_args.unwrap_or(InitArgs { salt: None });
+    let init_args = init_args.unwrap_or(InitOrUpgradeArgs {
+        salt: None,
+        email_sender_config: None,
+    });
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);

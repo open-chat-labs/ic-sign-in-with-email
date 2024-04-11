@@ -483,6 +483,10 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "email_sender_core",
+ "ic-cdk 0.13.2",
+ "query-string-builder",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -888,6 +892,7 @@ dependencies = [
  "ic0",
  "serde",
  "serde_bytes",
+ "slotmap",
 ]
 
 [[package]]
@@ -1380,6 +1385,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "query-string-builder"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32ab44e173687b56207cfe8addde8600eb82d9ec7e863f90155d2a5baad8ef46"
+dependencies = [
+ "percent-encoding",
 ]
 
 [[package]]

@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 async-trait.workspace = true
 email_sender_core.path = "../core"
+ic-cdk.workspace = true
+ic-cdk.features = ["transform-closure"]
+serde.workspace = true
+serde_json.workspace = true
+query-string-builder.workspace = true

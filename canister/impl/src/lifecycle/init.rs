@@ -1,15 +1,16 @@
 use crate::state::State;
 use crate::{env, rng, state};
 use ic_cdk::init;
-use sign_in_with_email_canister::InitArgs;
+use sign_in_with_email_canister::InitOrUpgradeArgs;
 use std::time::Duration;
 
 #[init]
-fn init(args: InitArgs) {
+fn init(args: InitOrUpgradeArgs) {
     state::init(State::new());
 
-    #[cfg(feature = "email_sender_aws")]
-    crate::email_sender::init(email_sender_aws::AwsEmailSender {});
+    if let Some(config) = args.email_sender_config {
+        crate::email_sender::init(config);
+    }
 
     if let Some(salt) = args.salt {
         state::mutate(|s| s.set_salt(salt));
