@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::identity::create_session_identity;
-use crate::rng::{random_bytes, random_principal};
+use crate::rng::random_principal;
 use crate::setup::setup_new_env;
 use candid::Principal;
 use ic_agent::Identity;
@@ -28,13 +28,10 @@ pub struct TestEnv {
 
 #[test]
 fn end_to_end_success() {
-    let salt = random_bytes();
-
     let TestEnv {
         mut env,
         canister_id,
     } = install_canister(Some(InitOrUpgradeArgs {
-        salt: Some(salt),
         email_sender_config: None,
     }));
 
@@ -62,7 +59,7 @@ fn end_to_end_success() {
         canister_id,
         &SubmitVerificationCodeArgs {
             email: email.to_string(),
-            code: generate_verification_code(salt),
+            code: generate_verification_code([0; 32]),
             session_key: identity.public_key().unwrap(),
             max_time_to_live: None,
         },
@@ -93,10 +90,7 @@ fn install_canister(init_args: Option<InitOrUpgradeArgs>) -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let init_args = init_args.unwrap_or(InitOrUpgradeArgs {
-        salt: None,
-        email_sender_config: None,
-    });
+    let init_args = init_args.unwrap_or_default();
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);

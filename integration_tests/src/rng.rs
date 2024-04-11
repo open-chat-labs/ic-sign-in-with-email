@@ -13,7 +13,3 @@ pub fn random_principal() -> Principal {
 
     Principal::from_slice(&random_bytes)
 }
-
-pub fn random_bytes() -> [u8; 32] {
-    random()
-}
