@@ -8,11 +8,11 @@ edition = "2021"
 [dependencies]
 async-trait.workspace = true
 aws-sign-v4.workspace = true
-chrono = "0.4.37"
+chrono.workspace = true
 email_sender_core.path = "../core"
 ic-cdk.workspace = true
 ic-cdk.features = ["transform-closure"]
-reqwest = "0.12.3"
+reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 query-string-builder.workspace = true

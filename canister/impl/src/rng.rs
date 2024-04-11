@@ -1,6 +1,7 @@
 use rand::distributions::{Distribution, Standard};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use rsa::RsaPrivateKey;
 use sign_in_with_email_canister::TimestampMillis;
 use std::cell::RefCell;
 
@@ -18,6 +19,10 @@ pub fn set_seed(salt: [u8; 32], now: TimestampMillis) {
 pub fn generate_verification_code() -> String {
     let random = gen::<u128>().to_string();
     random.chars().rev().take(8).collect()
+}
+
+pub fn generate_rsa_private_key() -> RsaPrivateKey {
+    RNG.with_borrow_mut(|rng| RsaPrivateKey::new(rng.as_mut().unwrap(), 2048).unwrap())
 }
 
 pub fn gen<T>() -> T

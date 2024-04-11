@@ -6,12 +6,7 @@ use std::time::Duration;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {
-    let email_sender_config = args
-        .email_sender_config
-        .expect("Email sender config not provided");
-
-    crate::email_sender::init(email_sender_config.clone());
-    state::init(State::new(email_sender_config));
+    state::init(State::default());
 
     if let Some(salt) = args.salt {
         state::mutate(|s| s.set_salt(salt));
@@ -25,8 +20,12 @@ fn init(args: InitOrUpgradeArgs) {
                     .try_into()
                     .unwrap();
 
-                state::mutate(|s| s.set_salt(salt));
                 rng::set_seed(salt, env::now());
+
+                state::mutate(|s| {
+                    s.set_rsa_private_key(rng::generate_rsa_private_key());
+                    s.set_salt(salt);
+                });
             })
         });
     }

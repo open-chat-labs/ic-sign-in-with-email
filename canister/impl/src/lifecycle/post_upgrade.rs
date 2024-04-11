@@ -1,3 +1,4 @@
+use crate::email_sender::EmailSenderConfig;
 use crate::lifecycle::READER_WRITER_BUFFER_SIZE;
 use crate::memory::get_upgrades_memory;
 use crate::state::State;
@@ -14,12 +15,21 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     let mut deserializer = rmp_serde::Deserializer::new(reader);
 
     let mut state = State::deserialize(&mut deserializer).unwrap();
+
     rng::set_seed(state.salt(), env::now());
 
     if let Some(config) = args.email_sender_config {
-        state.set_email_sender_config(config);
+        let rsa_private_key = state
+            .rsa_private_key()
+            .cloned()
+            .expect("RSA private key not set");
+
+        state.set_email_sender_config(EmailSenderConfig::from_encrypted(config, rsa_private_key));
     }
 
-    crate::email_sender::init(state.email_sender_config().clone());
+    if let Some(config) = state.email_sender_config().cloned() {
+        crate::email_sender::init(config);
+    }
+
     state::init(state);
 }

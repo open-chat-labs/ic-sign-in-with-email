@@ -1,3 +1,4 @@
+use crate::email_sender::EmailSenderConfig;
 use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
 use crate::model::salt::Salt;
 use crate::model::verification_codes::{CheckVerificationCodeError, VerificationCodes};
@@ -5,11 +6,12 @@ use crate::{env, Hash, DEFAULT_EXPIRATION_PERIOD, MAX_EXPIRATION_PERIOD};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
+use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, EmailSenderConfig, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, Nanoseconds, SignedDelegation, SubmitVerificationCodeArgs,
-    SubmitVerificationCodeResponse, SubmitVerificationCodeSuccess,
+    Delegation, GenerateVerificationCodeResponse, GetDelegationArgs, GetDelegationResponse,
+    Nanoseconds, SignedDelegation, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    SubmitVerificationCodeSuccess,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -18,12 +20,13 @@ thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct State {
     verification_codes: VerificationCodes,
     #[serde(skip)]
     signature_map: SignatureMap,
-    email_sender_config: EmailSenderConfig,
+    email_sender_config: Option<EmailSenderConfig>,
+    rsa_private_key: Option<RsaPrivateKey>,
     salt: Salt,
 }
 
@@ -53,21 +56,24 @@ pub fn take() -> State {
 }
 
 impl State {
-    pub fn new(email_sender_config: EmailSenderConfig) -> State {
-        State {
-            verification_codes: VerificationCodes::default(),
-            signature_map: SignatureMap::default(),
-            email_sender_config,
-            salt: Salt::default(),
-        }
-    }
-
-    pub fn email_sender_config(&self) -> &EmailSenderConfig {
-        &self.email_sender_config
+    pub fn email_sender_config(&self) -> Option<&EmailSenderConfig> {
+        self.email_sender_config.as_ref()
     }
 
     pub fn set_email_sender_config(&mut self, config: EmailSenderConfig) {
-        self.email_sender_config = config;
+        self.email_sender_config = Some(config);
+    }
+
+    pub fn rsa_public_key(&self) -> Option<RsaPublicKey> {
+        self.rsa_private_key.as_ref().map(RsaPublicKey::from)
+    }
+
+    pub fn rsa_private_key(&self) -> Option<&RsaPrivateKey> {
+        self.rsa_private_key.as_ref()
+    }
+
+    pub fn set_rsa_private_key(&mut self, private_key: RsaPrivateKey) {
+        self.rsa_private_key = Some(private_key);
     }
 
     pub fn salt(&self) -> [u8; 32] {

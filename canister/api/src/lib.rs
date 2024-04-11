@@ -27,3 +27,16 @@ pub struct SignedDelegation {
     #[serde(with = "serde_bytes")]
     pub signature: Vec<u8>,
 }
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub enum EncryptedEmailSenderConfig {
+    Aws(EncryptedAwsEmailSenderConfig),
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct EncryptedAwsEmailSenderConfig {
+    pub region: String,
+    pub target_arn: String,
+    pub access_key_encrypted: String,
+    pub secret_key_encrypted: String,
+}

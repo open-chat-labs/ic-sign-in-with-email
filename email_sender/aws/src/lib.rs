@@ -5,9 +5,14 @@ use ic_cdk::api::management_canister::http_request::{
 };
 use query_string_builder::QueryString;
 use reqwest::header::HeaderMap;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub struct AwsEmailSender {
+    config: AwsEmailSenderConfig,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AwsEmailSenderConfig {
     region: String,
     target_arn: String,
     access_key: String,
@@ -15,18 +20,8 @@ pub struct AwsEmailSender {
 }
 
 impl AwsEmailSender {
-    pub fn new(
-        region: String,
-        target_arn: String,
-        access_key: String,
-        secret_key: String,
-    ) -> AwsEmailSender {
-        AwsEmailSender {
-            region,
-            target_arn,
-            access_key,
-            secret_key,
-        }
+    pub fn new(config: AwsEmailSenderConfig) -> AwsEmailSender {
+        AwsEmailSender { config }
     }
 
     fn build_headers_and_url(
@@ -52,12 +47,12 @@ impl AwsEmailSender {
 
         let query_string = QueryString::new()
             .with_value("Action", "Publish")
-            .with_value("TargetArn", &self.target_arn)
+            .with_value("TargetArn", &self.config.target_arn)
             .with_value("MessageStructure", "JSON")
             .with_value("Message", serde_json::to_string(&message).unwrap())
             .with_value("MessageDeduplicationId", idempotency_id.to_string());
 
-        let region = &self.region;
+        let region = &self.config.region;
         let url = format!("https://sns.{region}.amazonaws.com/{query_string}");
 
         let signature = aws_sign_v4::AwsSign::new(
@@ -65,9 +60,9 @@ impl AwsEmailSender {
             &url,
             &datetime,
             &header_map,
-            &self.region,
-            &self.access_key,
-            &self.secret_key,
+            &self.config.region,
+            &self.config.access_key,
+            &self.config.secret_key,
             "SNS",
             "",
         )
