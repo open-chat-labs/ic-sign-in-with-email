@@ -1,4 +1,4 @@
-use crate::rng;
+use crate::{env, rng};
 use email_sender_core::EmailSender;
 use sign_in_with_email_canister::EmailSenderConfig;
 use std::sync::OnceLock;
@@ -13,6 +13,8 @@ pub fn init(config: EmailSenderConfig) {
             init_internal(email_sender_aws::AwsEmailSender::new(
                 aws.region,
                 aws.target_arn,
+                "".to_string(),
+                "".to_string(),
             ));
 
             #[cfg(not(feature = "email_sender_aws"))]
@@ -32,5 +34,5 @@ pub async fn send_verification_code_email(email: String, code: String) -> Result
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
     let idempotency_id = rng::gen();
 
-    sender.send(email, code, idempotency_id).await
+    sender.send(email, code, idempotency_id, env::now()).await
 }
