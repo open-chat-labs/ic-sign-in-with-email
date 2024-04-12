@@ -26,6 +26,7 @@ const INCORRECT_CODE: &str = "12345679";
 pub struct TestEnv {
     pub env: PocketIc,
     pub canister_id: Principal,
+    controller: Principal,
 }
 
 #[test_case(true)]
@@ -34,6 +35,7 @@ fn end_to_end(correct_code: bool) {
     let TestEnv {
         mut env,
         canister_id,
+        ..
     } = install_canister(None);
 
     let sender = random_principal();
@@ -100,19 +102,30 @@ fn end_to_end(correct_code: bool) {
     ));
 }
 
-fn install_canister(init_args: Option<InitOrUpgradeArgs>) -> TestEnv {
+#[test]
+fn upgrade_canister_succeeds() {
+    let TestEnv {
+        mut env,
+        canister_id,
+        controller,
+    } = install_canister(None);
+
+    upgrade_canister(&mut env, canister_id, controller, None);
+}
+
+fn install_canister(args: Option<InitOrUpgradeArgs>) -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let mut init_args = init_args.unwrap_or_default();
-    init_args.test_mode = Some(true);
+    let mut args = args.unwrap_or_default();
+    args.test_mode = Some(true);
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);
     env.install_canister(
         canister_id,
         wasm,
-        candid::encode_one(init_args).unwrap(),
+        candid::encode_one(args).unwrap(),
         Some(controller),
     );
 
@@ -120,7 +133,29 @@ fn install_canister(init_args: Option<InitOrUpgradeArgs>) -> TestEnv {
     env.tick();
     env.tick();
 
-    TestEnv { env, canister_id }
+    TestEnv {
+        env,
+        canister_id,
+        controller,
+    }
+}
+
+fn upgrade_canister(
+    env: &mut PocketIc,
+    canister_id: Principal,
+    sender: Principal,
+    args: Option<InitOrUpgradeArgs>,
+) {
+    let wasm = canister_wasm();
+    let args = args.unwrap_or_default();
+
+    env.upgrade_canister(
+        canister_id,
+        wasm,
+        candid::encode_one(args).unwrap(),
+        Some(sender),
+    )
+    .unwrap();
 }
 
 fn canister_wasm() -> Vec<u8> {
