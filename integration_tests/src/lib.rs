@@ -13,19 +13,24 @@ use sign_in_with_email_canister::{
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
+use test_case::test_case;
 
 mod client;
 mod identity;
 mod rng;
 mod setup;
 
+const CORRECT_CODE: &str = "12345678";
+const INCORRECT_CODE: &str = "12345679";
+
 pub struct TestEnv {
     pub env: PocketIc,
     pub canister_id: Principal,
 }
 
-#[test]
-fn end_to_end_success() {
+#[test_case(true)]
+#[test_case(false)]
+fn end_to_end(correct_code: bool) {
     let TestEnv {
         mut env,
         canister_id,
@@ -55,11 +60,24 @@ fn end_to_end_success() {
         canister_id,
         &SubmitVerificationCodeArgs {
             email: email.to_string(),
-            code: "12345678".to_string(),
+            code: (if correct_code {
+                CORRECT_CODE
+            } else {
+                INCORRECT_CODE
+            })
+            .to_string(),
             session_key: identity.public_key().unwrap(),
             max_time_to_live: None,
         },
     );
+
+    if !correct_code {
+        assert!(matches!(
+            submit_verification_code_response,
+            SubmitVerificationCodeResponse::IncorrectCode
+        ));
+        return;
+    }
 
     let SubmitVerificationCodeResponse::Success(result) = submit_verification_code_response else {
         panic!("{submit_verification_code_response:?}");
