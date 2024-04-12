@@ -1,11 +1,13 @@
-type AwsEmailSenderConfig = record {
+type Delegation = record { pubkey : blob; expiration : nat64 };
+type EncryptedAwsEmailSenderConfig = record {
   region : text;
   secret_key_encrypted : text;
   target_arn : text;
   access_key_encrypted : text;
 };
-type Delegation = record { pubkey : blob; expiration : nat64 };
-type EmailSenderConfig = variant { Aws : AwsEmailSenderConfig; Disabled };
+type EncryptedEmailSenderConfig = variant {
+  Aws : EncryptedAwsEmailSenderConfig;
+};
 type GenerateVerificationCodeArgs = record { email : text };
 type GenerateVerificationCodeResponse = variant {
   Blocked : nat64;
@@ -20,8 +22,8 @@ type GetDelegationArgs = record {
 };
 type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
 type InitOrUpgradeArgs = record {
-  salt : opt blob;
-  email_sender_config : opt EmailSenderConfig;
+  test_mode : opt bool;
+  email_sender_config : opt EncryptedEmailSenderConfig;
 };
 type SignedDelegation = record { signature : blob; delegation : Delegation };
 type SubmitVerificationCodeArgs = record {
