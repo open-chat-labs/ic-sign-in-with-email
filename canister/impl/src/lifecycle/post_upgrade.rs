@@ -2,7 +2,8 @@ use crate::email_sender::EmailSenderConfig;
 use crate::lifecycle::READER_WRITER_BUFFER_SIZE;
 use crate::memory::get_upgrades_memory;
 use crate::state::State;
-use crate::{env, rng, state};
+use crate::{email_sender, env, rng, state};
+use email_sender_core::NullEmailSender;
 use ic_cdk::post_upgrade;
 use ic_stable_structures::reader::{BufferedReader, Reader};
 use serde::Deserialize;
@@ -28,7 +29,9 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     }
 
     if let Some(config) = state.email_sender_config().cloned() {
-        crate::email_sender::init(config);
+        email_sender::init_from_config(config);
+    } else if state.test_mode() {
+        email_sender::init(NullEmailSender::default());
     }
 
     state::init(state);

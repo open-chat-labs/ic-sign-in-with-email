@@ -5,8 +5,6 @@ use crate::setup::setup_new_env;
 use candid::Principal;
 use ic_agent::Identity;
 use pocket_ic::PocketIc;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
 use sign_in_with_email_canister::{
     GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
     GetDelegationResponse, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
@@ -31,9 +29,7 @@ fn end_to_end_success() {
     let TestEnv {
         mut env,
         canister_id,
-    } = install_canister(Some(InitOrUpgradeArgs {
-        email_sender_config: None,
-    }));
+    } = install_canister(None);
 
     let sender = random_principal();
     let email = "blah@blah.com";
@@ -59,7 +55,7 @@ fn end_to_end_success() {
         canister_id,
         &SubmitVerificationCodeArgs {
             email: email.to_string(),
-            code: generate_verification_code([0; 32]),
+            code: "12345678".to_string(),
             session_key: identity.public_key().unwrap(),
             max_time_to_live: None,
         },
@@ -90,7 +86,8 @@ fn install_canister(init_args: Option<InitOrUpgradeArgs>) -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let init_args = init_args.unwrap_or_default();
+    let mut init_args = init_args.unwrap_or_default();
+    init_args.test_mode = Some(true);
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);
@@ -133,10 +130,4 @@ fn canister_wasm_path() -> PathBuf {
     .join("wasm32-unknown-unknown")
     .join("release")
     .join("sign_in_with_email_canister_impl.wasm")
-}
-
-fn generate_verification_code(seed: [u8; 32]) -> String {
-    let mut rng = StdRng::from_seed(seed);
-    let random = rng.gen::<u128>().to_string();
-    random.chars().rev().take(8).collect()
 }

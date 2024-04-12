@@ -1,12 +1,19 @@
 use crate::state::State;
-use crate::{env, rng, state};
+use crate::{email_sender, env, rng, state};
+use email_sender_core::NullEmailSender;
 use ic_cdk::init;
 use sign_in_with_email_canister::InitOrUpgradeArgs;
 use std::time::Duration;
 
 #[init]
-fn init(_args: InitOrUpgradeArgs) {
-    state::init(State::default());
+fn init(args: InitOrUpgradeArgs) {
+    let test_mode = args.test_mode.unwrap_or_default();
+
+    state::init(State::new(test_mode));
+
+    if test_mode {
+        email_sender::init(NullEmailSender::default());
+    }
 
     ic_cdk_timers::set_timer(Duration::ZERO, || {
         ic_cdk::spawn(async {

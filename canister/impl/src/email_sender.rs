@@ -8,13 +8,13 @@ use std::sync::OnceLock;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
 
-pub fn init(config: EmailSenderConfig) {
+pub fn init_from_config(config: EmailSenderConfig) {
     #[allow(unused_variables)]
     match config {
         EmailSenderConfig::Aws(aws) => {
             #[cfg(feature = "email_sender_aws")]
             {
-                init_internal(email_sender_aws::AwsEmailSender::from_encrypted(aws));
+                init(email_sender_aws::AwsEmailSender::from_encrypted(aws));
             }
 
             #[cfg(not(feature = "email_sender_aws"))]
@@ -23,8 +23,7 @@ pub fn init(config: EmailSenderConfig) {
     }
 }
 
-#[allow(dead_code)]
-fn init_internal(email_sender: impl EmailSender + 'static) {
+pub fn init(email_sender: impl EmailSender + 'static) {
     EMAIL_SENDER
         .set(Box::new(email_sender))
         .unwrap_or_else(|_| panic!("Email sender already set"));

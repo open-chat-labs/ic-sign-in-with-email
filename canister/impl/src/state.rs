@@ -28,6 +28,7 @@ pub struct State {
     email_sender_config: Option<EmailSenderConfig>,
     rsa_private_key: Option<RsaPrivateKey>,
     salt: Salt,
+    test_mode: bool,
 }
 
 const STATE_ALREADY_INITIALIZED: &str = "State has already been initialized";
@@ -56,6 +57,13 @@ pub fn take() -> State {
 }
 
 impl State {
+    pub fn new(test_mode: bool) -> State {
+        State {
+            test_mode,
+            ..Default::default()
+        }
+    }
+
     pub fn email_sender_config(&self) -> Option<&EmailSenderConfig> {
         self.email_sender_config.as_ref()
     }
@@ -82,6 +90,10 @@ impl State {
 
     pub fn set_salt(&mut self, salt: [u8; 32]) {
         self.salt.set(salt);
+    }
+
+    pub fn test_mode(&self) -> bool {
+        self.test_mode
     }
 
     pub fn store_verification_code(

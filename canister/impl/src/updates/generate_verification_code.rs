@@ -9,7 +9,13 @@ use sign_in_with_email_canister::{
 async fn generate_verification_code(
     args: GenerateVerificationCodeArgs,
 ) -> GenerateVerificationCodeResponse {
-    let code = rng::generate_verification_code();
+    let test_mode = state::read(|s| s.test_mode());
+
+    let code = if test_mode {
+        "12345678".to_string()
+    } else {
+        rng::generate_verification_code()
+    };
 
     let response = state::mutate(|s| s.store_verification_code(args.email.clone(), code.clone()));
 
