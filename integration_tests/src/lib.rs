@@ -7,8 +7,8 @@ use ic_agent::Identity;
 use pocket_ic::PocketIc;
 use sign_in_with_email_canister::{
     GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
-    SubmitVerificationCodeResponse,
+    GetDelegationResponse, InitArgs, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
+    SubmitVerificationCodeResponse, UpgradeArgs,
 };
 use std::fs::File;
 use std::io::Read;
@@ -36,7 +36,7 @@ fn end_to_end(correct_code: bool) {
         mut env,
         canister_id,
         ..
-    } = install_canister(None);
+    } = install_canister();
 
     let sender = random_principal();
     let email = "blah@blah.com";
@@ -108,17 +108,16 @@ fn upgrade_canister_succeeds() {
         mut env,
         canister_id,
         controller,
-    } = install_canister(None);
+    } = install_canister();
 
     upgrade_canister(&mut env, canister_id, controller, None);
 }
 
-fn install_canister(args: Option<InitOrUpgradeArgs>) -> TestEnv {
+fn install_canister() -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let mut args = args.unwrap_or_default();
-    args.test_mode = Some(true);
+    let args = InitOrUpgradeArgs::Init(InitArgs { test_mode: true });
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);
@@ -144,10 +143,10 @@ fn upgrade_canister(
     env: &mut PocketIc,
     canister_id: Principal,
     sender: Principal,
-    args: Option<InitOrUpgradeArgs>,
+    args: Option<UpgradeArgs>,
 ) {
     let wasm = canister_wasm();
-    let args = args.unwrap_or_default();
+    let args = InitOrUpgradeArgs::Upgrade(args.unwrap_or_default());
 
     env.upgrade_canister(
         canister_id,

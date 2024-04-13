@@ -7,11 +7,11 @@ use std::time::Duration;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {
-    let test_mode = args.test_mode.unwrap_or_default();
+    let init_args = args.to_init_args();
 
-    state::init(State::new(test_mode));
+    state::init(State::new(init_args.test_mode));
 
-    if test_mode {
+    if init_args.test_mode {
         email_sender::init(NullEmailSender::default());
     }
 

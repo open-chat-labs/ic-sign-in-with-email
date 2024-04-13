@@ -1,3 +1,3 @@
-mod init;
+mod init_or_upgrade;
 
-pub use init::*;
+pub use init_or_upgrade::*;

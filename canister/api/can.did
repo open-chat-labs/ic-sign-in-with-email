@@ -21,10 +21,8 @@ type GetDelegationArgs = record {
   expiration : nat64;
 };
 type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
-type InitOrUpgradeArgs = record {
-  test_mode : opt bool;
-  email_sender_config : opt EncryptedEmailSenderConfig;
-};
+type InitArgs = record { test_mode : bool };
+type InitOrUpgradeArgs = variant { Upgrade : UpgradeArgs; Init : InitArgs };
 type SignedDelegation = record { signature : blob; delegation : Delegation };
 type SubmitVerificationCodeArgs = record {
   session_key : blob;
@@ -40,6 +38,9 @@ type SubmitVerificationCodeResponse = variant {
 type SubmitVerificationCodeSuccess = record {
   user_key : blob;
   expiration : nat64;
+};
+type UpgradeArgs = record {
+  email_sender_config : opt EncryptedEmailSenderConfig;
 };
 service : (InitOrUpgradeArgs) -> {
   generate_verification_code : (GenerateVerificationCodeArgs) -> (
