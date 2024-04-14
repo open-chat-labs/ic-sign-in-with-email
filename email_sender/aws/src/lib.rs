@@ -1,18 +1,15 @@
 use async_trait::async_trait;
 use email_sender_core::EmailSender;
+use http::HeaderMap;
 use ic_cdk::api::management_canister::http_request::{
     CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse,
 };
 use query_string_builder::QueryString;
-use reqwest::header::HeaderMap;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use time::format_description::well_known::Iso8601;
+use time::OffsetDateTime;
 
 pub struct AwsEmailSender {
-    config: AwsEmailSenderConfig,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AwsEmailSenderConfig {
     region: String,
     target_arn: String,
     access_key: String,
@@ -20,8 +17,18 @@ pub struct AwsEmailSenderConfig {
 }
 
 impl AwsEmailSender {
-    pub fn new(config: AwsEmailSenderConfig) -> AwsEmailSender {
-        AwsEmailSender { config }
+    pub fn new(
+        region: String,
+        target_arn: String,
+        access_key: String,
+        secret_key: String,
+    ) -> AwsEmailSender {
+        AwsEmailSender {
+            region,
+            target_arn,
+            access_key,
+            secret_key,
+        }
     }
 
     fn build_headers_and_url(
@@ -31,14 +38,15 @@ impl AwsEmailSender {
         idempotency_id: u64,
         now_millis: u64,
     ) -> (Vec<HttpHeader>, String) {
-        let datetime = chrono::DateTime::from_timestamp_millis(now_millis as i64).unwrap();
+        let datetime =
+            OffsetDateTime::from_unix_timestamp_nanos(now_millis as i128 * 1_000_000).unwrap();
 
         let mut header_map = HeaderMap::new();
         header_map.insert(
             "X-Amz-Date",
             datetime
-                .format("%Y%m%dT%H%M%SZ")
-                .to_string()
+                .format(&Iso8601::DATE_TIME)
+                .unwrap()
                 .parse()
                 .unwrap(),
         );
@@ -47,28 +55,29 @@ impl AwsEmailSender {
 
         let query_string = QueryString::new()
             .with_value("Action", "Publish")
-            .with_value("TargetArn", &self.config.target_arn)
+            .with_value("TargetArn", &self.target_arn)
             .with_value("MessageStructure", "JSON")
             .with_value("Message", serde_json::to_string(&message).unwrap())
             .with_value("MessageDeduplicationId", idempotency_id.to_string());
 
-        let region = &self.config.region;
+        let region = &self.region;
         let url = format!("https://sns.{region}.amazonaws.com/{query_string}");
 
-        let signature = aws_sign_v4::AwsSign::new(
+        let signature = "".to_string();
+        aws_sign_v4::AwsSign::new(
             "POST",
             &url,
             &datetime,
             &header_map,
-            &self.config.region,
-            &self.config.access_key,
-            &self.config.secret_key,
+            &self.region,
+            &self.access_key,
+            &self.secret_key,
             "SNS",
             "",
         )
         .sign();
 
-        header_map.insert(reqwest::header::AUTHORIZATION, signature.parse().unwrap());
+        header_map.insert(http::header::AUTHORIZATION, signature.parse().unwrap());
 
         let headers = header_map
             .into_iter()

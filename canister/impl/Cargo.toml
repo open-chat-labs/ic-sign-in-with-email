@@ -29,4 +29,5 @@ sha2.workspace = true
 sign_in_with_email_canister.path = "../api"
 
 [features]
+default = ["aws"]
 aws = ["email_sender_aws"]
