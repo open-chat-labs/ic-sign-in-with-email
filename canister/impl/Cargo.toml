@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+base64.workspace = true
 candid.workspace = true
 canister_sig_util.workspace = true
 email_sender_aws = { path = "../../email_sender/aws", optional = true }

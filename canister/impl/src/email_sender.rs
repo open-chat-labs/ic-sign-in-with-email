@@ -1,4 +1,6 @@
 use crate::{env, rng};
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use candid::{CandidType, Deserialize};
 use email_sender_core::EmailSender;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
@@ -14,7 +16,12 @@ pub fn init_from_config(config: EmailSenderConfig) {
         EmailSenderConfig::Aws(aws) => {
             #[cfg(feature = "email_sender_aws")]
             {
-                init(email_sender_aws::AwsEmailSender::from_encrypted(aws));
+                init(email_sender_aws::AwsEmailSender::new(
+                    aws.region,
+                    aws.target_arn,
+                    aws.access_key,
+                    aws.secret_key,
+                ));
             }
 
             #[cfg(not(feature = "email_sender_aws"))]
@@ -70,18 +77,16 @@ impl AwsEmailSenderConfig {
         AwsEmailSenderConfig {
             region: config.region,
             target_arn: config.target_arn,
-            access_key: String::from_utf8(
-                rsa_private_key
-                    .decrypt(Pkcs1v15Encrypt, config.access_key_encrypted.as_bytes())
-                    .unwrap(),
-            )
-            .unwrap(),
-            secret_key: String::from_utf8(
-                rsa_private_key
-                    .decrypt(Pkcs1v15Encrypt, config.secret_key_encrypted.as_bytes())
-                    .unwrap(),
-            )
-            .unwrap(),
+            access_key: decrypt(&config.access_key_encrypted, &rsa_private_key),
+            secret_key: decrypt(&config.secret_key_encrypted, &rsa_private_key),
         }
     }
+}
+
+fn decrypt(value: &str, rsa_private_key: &RsaPrivateKey) -> String {
+    BASE64_STANDARD.encode(
+        rsa_private_key
+            .decrypt(Pkcs1v15Encrypt, &BASE64_STANDARD.decode(value).unwrap())
+            .unwrap(),
+    )
 }

@@ -13,6 +13,7 @@ resolver = "2"
 [workspace.dependencies]
 async-trait = "0.1.79"
 aws-sign-v4 = "0.3.0"
+base64 = "0.22.0"
 candid = "0.10.6"
 canister_sig_util = { git = "https://github.com/dfinity/internet-identity", rev = "cdf3ffd7358d775e1da31183abe2b54383187579" }
 chrono = "0.4.37"

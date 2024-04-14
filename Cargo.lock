@@ -2295,6 +2295,7 @@ dependencies = [
 name = "sign_in_with_email_canister_impl"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.0",
  "candid",
  "canister_sig_util",
  "email_sender_aws",
