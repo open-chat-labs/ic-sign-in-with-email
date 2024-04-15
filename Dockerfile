@@ -3,12 +3,14 @@ FROM ubuntu:22.04 as builder
 SHELL ["bash", "-c"]
 
 ARG git_commit_id
+ARG rustflags
 ARG rust_version=1.76.0
 
 ENV GIT_COMMIT_ID=$git_commit_id
 ENV TZ=UTC
 ENV DFX_VERSION=0.19.0
 ENV PATH="/root/.local/share/dfx/bin:$PATH"
+ENV RUSTFLAGS=$rustflags
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt -yq update && \

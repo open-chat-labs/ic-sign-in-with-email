@@ -3,7 +3,8 @@
     "sign_in_with_email": {
       "type": "rust",
       "package": "sign_in_with_email_canister_impl",
-      "candid": "canister/api/can.did"
+      "candid": "canister/api/can.did",
+      "gzip": true
     }
   },
   "version": 1
