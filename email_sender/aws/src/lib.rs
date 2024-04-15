@@ -2,11 +2,11 @@ use async_trait::async_trait;
 use email_sender_core::EmailSender;
 use http::HeaderMap;
 use ic_cdk::api::management_canister::http_request::{
-    CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse,
+    CanisterHttpRequestArgument, HttpHeader, HttpMethod,
 };
-use query_string_builder::QueryString;
 use serde::Serialize;
-use time::format_description::well_known::Iso8601;
+use time::format_description::BorrowedFormatItem;
+use time::macros::format_description;
 use time::OffsetDateTime;
 
 pub struct AwsEmailSender {
@@ -15,6 +15,9 @@ pub struct AwsEmailSender {
     access_key: String,
     secret_key: String,
 }
+
+const LONG_DATETIME: &[BorrowedFormatItem] =
+    format_description!("[year][month][day]T[hour][minute][second]Z");
 
 impl AwsEmailSender {
     pub fn new(
@@ -31,40 +34,44 @@ impl AwsEmailSender {
         }
     }
 
-    fn build_headers_and_url(
+    fn build_args(
         &self,
         email: String,
         code: String,
         idempotency_id: u64,
         now_millis: u64,
-    ) -> (Vec<HttpHeader>, String) {
+    ) -> CanisterHttpRequestArgument {
         let datetime =
             OffsetDateTime::from_unix_timestamp_nanos(now_millis as i128 * 1_000_000).unwrap();
+
+        let region = &self.region;
+        let host = format!("sns.{region}.amazonaws.com");
+        let url = format!("https://{host}");
 
         let mut header_map = HeaderMap::new();
         header_map.insert(
             "X-Amz-Date",
-            datetime
-                .format(&Iso8601::DATE_TIME)
-                .unwrap()
-                .parse()
-                .unwrap(),
+            datetime.format(&LONG_DATETIME).unwrap().parse().unwrap(),
+        );
+        header_map.insert("host", host.parse().unwrap());
+        header_map.insert(
+            http::header::CONTENT_TYPE,
+            "application/x-www-form-urlencoded".parse().unwrap(),
         );
 
-        let message = EmailAndCode { email, code };
+        let message_deduplication_id = idempotency_id.to_string();
+        let message = serde_json::to_string(&EmailAndCode { email, code }).unwrap();
 
-        let query_string = QueryString::new()
-            .with_value("Action", "Publish")
-            .with_value("TargetArn", &self.target_arn)
-            .with_value("MessageStructure", "JSON")
-            .with_value("Message", serde_json::to_string(&message).unwrap())
-            .with_value("MessageDeduplicationId", idempotency_id.to_string());
+        let body = [
+            ("Action", "Publish"),
+            ("TargetArn", &self.target_arn),
+            ("Message", &message),
+            ("MessageDeduplicationId", &message_deduplication_id),
+            ("MessageGroupId", "0"),
+        ];
+        let body = serde_urlencoded::to_string(body).unwrap();
 
-        let region = &self.region;
-        let url = format!("https://sns.{region}.amazonaws.com/{query_string}");
-
-        let signature = "".to_string();
-        aws_sign_v4::AwsSign::new(
+        let signature = aws_sign_v4::AwsSign::new(
             "POST",
             &url,
             &datetime,
@@ -72,8 +79,8 @@ impl AwsEmailSender {
             &self.region,
             &self.access_key,
             &self.secret_key,
-            "SNS",
-            "",
+            "sns",
+            &body,
         )
         .sign();
 
@@ -87,7 +94,14 @@ impl AwsEmailSender {
             })
             .collect();
 
-        (headers, url)
+        CanisterHttpRequestArgument {
+            url,
+            max_response_bytes: Some(5 * 1024), // 5KB
+            method: HttpMethod::POST,
+            headers,
+            body: Some(body.as_bytes().to_vec()),
+            transform: None,
+        }
     }
 }
 
@@ -106,34 +120,17 @@ impl EmailSender for AwsEmailSender {
         idempotency_id: u64,
         now_millis: u64,
     ) -> Result<(), String> {
-        let (headers, url) = self.build_headers_and_url(email, code, idempotency_id, now_millis);
+        let args = self.build_args(email, code, idempotency_id, now_millis);
 
-        let args = CanisterHttpRequestArgument {
-            url,
-            max_response_bytes: Some(5 * 1024), // 5KB
-            method: HttpMethod::POST,
-            headers,
-            body: None,
-            transform: None,
-        };
+        let resp =
+            ic_cdk::api::management_canister::http_request::http_request(args, 1_000_000_000)
+                .await
+                .map_err(|e| format!("{e:?}"))?;
 
-        let status_code: u32 =
-            ic_cdk::api::management_canister::http_request::http_request_with_closure(
-                args,
-                1_000_000_000,
-                |response| HttpResponse {
-                    status: response.status,
-                    ..Default::default()
-                },
-            )
-            .await
-            .map(|(r,)| r.status.0.try_into().unwrap())
-            .map_err(|e| format!("{e:?}"))?;
-
-        if status_code == 200 {
+        if u32::try_from(resp.clone().0.status.0).unwrap() == 200u32 {
             Ok(())
         } else {
-            Err(format!("Response code: {status_code}"))
+            Err(format!("Response code: {resp:?}"))
         }
     }
 }

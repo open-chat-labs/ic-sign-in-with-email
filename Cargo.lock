@@ -76,7 +76,7 @@ checksum = "f1fdabc7756949593fe60f30ec81974b613357de856987752631dea1e3394c80"
 [[package]]
 name = "aws-sign-v4"
 version = "0.3.0"
-source = "git+https://github.com/hpeebles/aws-sign-v4?rev=932db2b573ce7a75d700baa1c8dc4c99c208923f#932db2b573ce7a75d700baa1c8dc4c99c208923f"
+source = "git+https://github.com/hpeebles/aws-sign-v4?rev=33b65dfde0676544a23c41608da77bd0a117d9ce#33b65dfde0676544a23c41608da77bd0a117d9ce"
 dependencies = [
  "hex",
  "hmac",
@@ -505,9 +505,9 @@ dependencies = [
  "email_sender_core",
  "http 1.1.0",
  "ic-cdk 0.13.2",
- "query-string-builder",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "time",
 ]
 
@@ -914,7 +914,6 @@ dependencies = [
  "ic0",
  "serde",
  "serde_bytes",
- "slotmap",
 ]
 
 [[package]]
@@ -1457,15 +1456,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
 dependencies = [
  "cc",
-]
-
-[[package]]
-name = "query-string-builder"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32ab44e173687b56207cfe8addde8600eb82d9ec7e863f90155d2a5baad8ef46"
-dependencies = [
- "percent-encoding",
 ]
 
 [[package]]

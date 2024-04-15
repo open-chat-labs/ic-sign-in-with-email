@@ -84,9 +84,10 @@ impl AwsEmailSenderConfig {
 }
 
 fn decrypt(value: &str, rsa_private_key: &RsaPrivateKey) -> String {
-    BASE64_STANDARD.encode(
+    String::from_utf8(
         rsa_private_key
             .decrypt(Pkcs1v15Encrypt, &BASE64_STANDARD.decode(value).unwrap())
             .unwrap(),
     )
+    .unwrap()
 }
