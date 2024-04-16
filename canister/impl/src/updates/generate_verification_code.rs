@@ -1,3 +1,4 @@
+use crate::utils::verify_and_clean_email;
 use crate::{email_sender, rng, state};
 use ic_cdk::update;
 use sign_in_with_email_canister::{
@@ -17,10 +18,14 @@ async fn generate_verification_code(
         rng::generate_verification_code()
     };
 
-    let response = state::mutate(|s| s.store_verification_code(args.email.clone(), code.clone()));
+    let Some(email) = verify_and_clean_email(args.email) else {
+        return EmailInvalid;
+    };
+
+    let response = state::mutate(|s| s.store_verification_code(email.clone(), code.clone()));
 
     if matches!(response, Success) {
-        if let Err(error) = email_sender::send_verification_code_email(args.email, code).await {
+        if let Err(error) = email_sender::send_verification_code_email(email, code).await {
             return FailedToSendEmail(error);
         }
     }

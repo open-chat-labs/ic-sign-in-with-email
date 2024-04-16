@@ -9,9 +9,8 @@ use ic_cdk::api::set_certified_data;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GenerateVerificationCodeResponse, GetDelegationArgs, GetDelegationResponse,
-    Nanoseconds, SignedDelegation, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
-    SubmitVerificationCodeSuccess,
+    Delegation, GenerateVerificationCodeResponse, GetDelegationResponse, Nanoseconds,
+    SignedDelegation, SubmitVerificationCodeResponse, SubmitVerificationCodeSuccess,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -111,17 +110,20 @@ impl State {
 
     pub fn submit_verification_code(
         &mut self,
-        args: SubmitVerificationCodeArgs,
+        email: String,
+        code: String,
+        session_key: Vec<u8>,
+        max_time_to_live: Option<Nanoseconds>,
     ) -> SubmitVerificationCodeResponse {
         let now = env::now();
 
-        match self.verification_codes.check(&args.email, &args.code, now) {
+        match self.verification_codes.check(&email, &code, now) {
             Ok(_) => {
-                let seed = self.calculate_seed(&args.email);
+                let seed = self.calculate_seed(&email);
                 SubmitVerificationCodeResponse::Success(self.prepare_delegation(
                     seed,
-                    args.session_key,
-                    args.max_time_to_live,
+                    session_key,
+                    max_time_to_live,
                 ))
             }
             Err(CheckVerificationCodeError::Incorrect) => {
@@ -131,13 +133,9 @@ impl State {
         }
     }
 
-    pub fn get_delegation(&self, args: GetDelegationArgs) -> GetDelegationResponse {
-        let delegation = Delegation {
-            pubkey: args.session_key,
-            expiration: args.expiration,
-        };
+    pub fn get_delegation(&self, email: String, delegation: Delegation) -> GetDelegationResponse {
         let message_hash = delegation_signature_msg_hash(&delegation);
-        let seed = self.calculate_seed(&args.email);
+        let seed = self.calculate_seed(&email);
 
         if let Ok(signature) = self
             .signature_map

@@ -497,6 +497,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "email_address"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2153bd83ebc09db15bcbdc3e2194d901804952e3dc96967e1cd3b0c5c32d112"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "email_sender_aws"
 version = "0.1.0"
 dependencies = [
@@ -1900,6 +1909,7 @@ dependencies = [
  "base64 0.22.0",
  "candid",
  "canister_sig_util",
+ "email_address",
  "email_sender_aws",
  "email_sender_core",
  "getrandom",
