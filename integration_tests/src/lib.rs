@@ -20,8 +20,8 @@ mod identity;
 mod rng;
 mod setup;
 
-const CORRECT_CODE: &str = "12345678";
-const INCORRECT_CODE: &str = "12345679";
+const CORRECT_CODE: &str = "123456";
+const INCORRECT_CODE: &str = "123457";
 
 pub struct TestEnv {
     pub env: PocketIc,
