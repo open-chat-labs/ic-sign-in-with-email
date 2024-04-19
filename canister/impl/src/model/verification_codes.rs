@@ -59,6 +59,7 @@ impl VerificationCodes {
         };
 
         if code.check(attempt, now) {
+            self.codes.remove(&seed);
             self.failed_attempts.remove(&seed);
             Ok(())
         } else {
