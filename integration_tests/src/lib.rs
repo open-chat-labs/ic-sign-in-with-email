@@ -76,7 +76,7 @@ fn end_to_end(correct_code: bool) {
     if !correct_code {
         assert!(matches!(
             submit_verification_code_response,
-            SubmitVerificationCodeResponse::IncorrectCode
+            SubmitVerificationCodeResponse::IncorrectCode(_)
         ));
         return;
     }

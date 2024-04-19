@@ -1,7 +1,7 @@
 use crate::model::validated_email::ValidatedEmail;
 use crate::ONE_MINUTE;
 use serde::{Deserialize, Serialize};
-use sign_in_with_email_canister::{Milliseconds, TimestampMillis};
+use sign_in_with_email_canister::{IncorrectCode, Milliseconds, TimestampMillis};
 use std::collections::HashMap;
 
 const VERIFICATION_CODE_TTL: Milliseconds = 5 * ONE_MINUTE; // 5 minutes
@@ -9,7 +9,7 @@ const VERIFICATION_CODE_TTL: Milliseconds = 5 * ONE_MINUTE; // 5 minutes
 #[derive(Serialize, Deserialize, Default)]
 pub struct VerificationCodes {
     codes: HashMap<String, VerificationCode>,
-    failed_attempts: HashMap<String, FailedAttempts>,
+    failed_attempts: FailedAttemptsMap,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -17,6 +17,11 @@ struct VerificationCode {
     code: String,
     created: TimestampMillis,
     attempts: Vec<TimestampMillis>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct FailedAttemptsMap {
+    map: HashMap<String, FailedAttempts>,
 }
 
 impl VerificationCodes {
@@ -28,12 +33,14 @@ impl VerificationCodes {
     ) -> Result<(), TimestampMillis> {
         self.clear_expired(now);
 
-        if let Some(blocked_until) = self
-            .failed_attempts
-            .get(email.as_str())
-            .map(|f| f.blocked_until)
-            .filter(|ts| *ts > now)
-        {
+        if let Some(existing) = self.codes.remove(email.as_str()) {
+            if !existing.attempts.is_empty() {
+                self.failed_attempts
+                    .mark_failed_attempt(email.as_str(), now);
+            }
+        }
+
+        if let Some(blocked_until) = self.failed_attempts.blocked_until(email.as_str(), now) {
             Err(blocked_until)
         } else {
             self.codes
@@ -60,19 +67,51 @@ impl VerificationCodes {
             self.failed_attempts.remove(email_str);
             Ok(())
         } else {
-            if code.attempts.len() >= 3 {
+            let attempts_remaining = 2u32.saturating_sub(code.attempts.len() as u32);
+            let mut blocked_until = None;
+            if attempts_remaining == 0 {
                 self.codes.remove(email_str);
-                self.failed_attempts
-                    .entry(email.to_string())
-                    .or_default()
-                    .mark_failed_attempt(now);
+                blocked_until = Some(self.failed_attempts.mark_failed_attempt(email_str, now));
             }
-            Err(CheckVerificationCodeError::Incorrect)
+            Err(CheckVerificationCodeError::Incorrect(IncorrectCode {
+                attempts_remaining,
+                blocked_until,
+            }))
         }
     }
 
     fn clear_expired(&mut self, now: TimestampMillis) {
-        self.codes.retain(|_, c| !c.expired(now));
+        self.codes.retain(|e, c| {
+            let expiry = c.expiry();
+            let expired = expiry < now;
+            if expired {
+                if !c.attempts.is_empty() {
+                    self.failed_attempts.mark_failed_attempt(e.as_str(), expiry);
+                }
+                false
+            } else {
+                true
+            }
+        });
+    }
+}
+
+impl FailedAttemptsMap {
+    fn blocked_until(&self, email: &str, now: TimestampMillis) -> Option<TimestampMillis> {
+        self.map
+            .get(email)
+            .map(|f| f.blocked_until)
+            .filter(|ts| *ts > now)
+    }
+
+    fn remove(&mut self, email: &str) {
+        self.map.remove(email);
+    }
+
+    fn mark_failed_attempt(&mut self, email: &str, now: TimestampMillis) -> TimestampMillis {
+        let failed_attempts = self.map.entry(email.to_string()).or_default();
+        failed_attempts.mark_failed_attempt(now);
+        failed_attempts.blocked_until
     }
 }
 
@@ -94,8 +133,8 @@ impl VerificationCode {
         }
     }
 
-    fn expired(&self, now: TimestampMillis) -> bool {
-        now.saturating_sub(self.created) > VERIFICATION_CODE_TTL
+    fn expiry(&self) -> TimestampMillis {
+        self.created + VERIFICATION_CODE_TTL
     }
 }
 
@@ -110,9 +149,12 @@ impl FailedAttempts {
         self.failed_attempts += 1;
 
         let blocked_duration = match self.failed_attempts {
+            0 => 0,
             1 => ONE_MINUTE,
-            2 => 5 * ONE_MINUTE,
-            3 => 60 * ONE_MINUTE,
+            2 => 2 * ONE_MINUTE,
+            3 => 5 * ONE_MINUTE,
+            4 => 15 * ONE_MINUTE,
+            5 => 60 * ONE_MINUTE,
             _ => 12 * 60 * ONE_MINUTE,
         };
 
@@ -121,6 +163,6 @@ impl FailedAttempts {
 }
 
 pub enum CheckVerificationCodeError {
-    Incorrect,
+    Incorrect(IncorrectCode),
     NotFound,
 }
