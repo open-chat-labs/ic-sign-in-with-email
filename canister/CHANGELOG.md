@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Avoid storing any email addresses ([#6](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/6))
 - Return `blocked_duration` rather than `blocked_until` ([#7](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/7))
 
+### Fixed
+
+- Remove verification code after successful attempt ([#8](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/8))
+
 ## [[0.3.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.3.0)] - 2024-04-19
 
 ### Changed
