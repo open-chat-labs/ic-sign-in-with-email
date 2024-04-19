@@ -1,6 +1,7 @@
 use crate::email_sender::EmailSenderConfig;
 use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
 use crate::model::salt::Salt;
+use crate::model::validated_email::ValidatedEmail;
 use crate::model::verification_codes::{CheckVerificationCodeError, VerificationCodes};
 use crate::{env, Hash, DEFAULT_EXPIRATION_PERIOD, MAX_EXPIRATION_PERIOD};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
@@ -97,7 +98,7 @@ impl State {
 
     pub fn store_verification_code(
         &mut self,
-        email: String,
+        email: ValidatedEmail,
         code: String,
     ) -> GenerateVerificationCodeResponse {
         let now = env::now();
@@ -110,7 +111,7 @@ impl State {
 
     pub fn submit_verification_code(
         &mut self,
-        email: String,
+        email: ValidatedEmail,
         code: String,
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
@@ -133,7 +134,11 @@ impl State {
         }
     }
 
-    pub fn get_delegation(&self, email: String, delegation: Delegation) -> GetDelegationResponse {
+    pub fn get_delegation(
+        &self,
+        email: ValidatedEmail,
+        delegation: Delegation,
+    ) -> GetDelegationResponse {
         let message_hash = delegation_signature_msg_hash(&delegation);
         let seed = self.calculate_seed(&email);
 
@@ -188,14 +193,14 @@ impl State {
         CanisterSigPublicKey::new(canister_id, seed.to_vec()).to_der()
     }
 
-    fn calculate_seed(&self, email: &str) -> [u8; 32] {
+    fn calculate_seed(&self, email: &ValidatedEmail) -> [u8; 32] {
         let salt = self.salt.get();
 
         let mut bytes: Vec<u8> = vec![];
         bytes.push(salt.len() as u8);
         bytes.extend_from_slice(&salt);
 
-        let email_bytes = email.bytes();
+        let email_bytes = email.as_str().bytes();
         bytes.push(email_bytes.len() as u8);
         bytes.extend(email_bytes);
 

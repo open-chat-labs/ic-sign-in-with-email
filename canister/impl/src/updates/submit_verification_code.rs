@@ -1,11 +1,11 @@
+use crate::model::validated_email::ValidatedEmail;
 use crate::state;
-use crate::utils::verify_and_clean_email;
 use ic_cdk::update;
 use sign_in_with_email_canister::{SubmitVerificationCodeArgs, SubmitVerificationCodeResponse};
 
 #[update]
 fn submit_verification_code(args: SubmitVerificationCodeArgs) -> SubmitVerificationCodeResponse {
-    let Some(email) = verify_and_clean_email(args.email) else {
+    let Ok(email) = ValidatedEmail::try_from(args.email) else {
         return SubmitVerificationCodeResponse::NotFound;
     };
 

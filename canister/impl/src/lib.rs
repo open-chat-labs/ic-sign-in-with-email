@@ -11,7 +11,6 @@ mod queries;
 mod rng;
 mod state;
 mod updates;
-mod utils;
 
 type Hash = [u8; 32];
 

@@ -1,4 +1,4 @@
-use crate::utils::verify_and_clean_email;
+use crate::model::validated_email::ValidatedEmail;
 use crate::{email_sender, rng, state};
 use ic_cdk::update;
 use sign_in_with_email_canister::{
@@ -18,7 +18,7 @@ async fn generate_verification_code(
         rng::generate_verification_code()
     };
 
-    let Some(email) = verify_and_clean_email(args.email) else {
+    let Ok(email) = ValidatedEmail::try_from(args.email) else {
         return EmailInvalid;
     };
 

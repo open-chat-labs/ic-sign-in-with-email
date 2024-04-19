@@ -1,3 +1,4 @@
+use crate::model::validated_email::ValidatedEmail;
 use crate::{env, rng};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -36,11 +37,16 @@ pub fn init(email_sender: impl EmailSender + 'static) {
         .unwrap_or_else(|_| panic!("Email sender already set"));
 }
 
-pub async fn send_verification_code_email(email: String, code: String) -> Result<(), String> {
+pub async fn send_verification_code_email(
+    email: ValidatedEmail,
+    code: String,
+) -> Result<(), String> {
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
     let idempotency_id = rng::gen();
 
-    sender.send(email, code, idempotency_id, env::now()).await
+    sender
+        .send(email.into(), code, idempotency_id, env::now())
+        .await
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
