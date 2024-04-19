@@ -1,6 +1,5 @@
 use crate::identity::create_session_identity;
 use crate::rng::random_principal;
-use crate::utils::now;
 use crate::{client, TestEnv, CORRECT_CODE, INCORRECT_CODE};
 use ic_agent::Identity;
 use sign_in_with_email_canister::{
@@ -97,8 +96,6 @@ fn incorrect_code_increases_blocked_duration() {
     let mut previous_blocked_duration = 0;
 
     for _ in 0..5 {
-        let start = now(&env);
-
         let generate_verification_code_response = client::generate_verification_code(
             &mut env,
             sender,
@@ -135,17 +132,15 @@ fn incorrect_code_increases_blocked_duration() {
             assert_eq!(ic.attempts_remaining, 3 - attempt);
 
             if attempt == 3 {
-                let blocked_until = ic.blocked_until.expect("Blocked until not set");
-                let blocked_duration = blocked_until.saturating_sub(start);
+                let blocked_duration = ic.blocked_duration.expect("Blocked until not set");
                 assert!(blocked_duration > previous_blocked_duration);
                 previous_blocked_duration = blocked_duration;
             } else {
-                assert!(ic.blocked_until.is_none());
+                assert!(ic.blocked_duration.is_none());
             }
         }
 
         env.advance_time(Duration::from_millis(previous_blocked_duration - 1));
-        let now = now(&env);
 
         let generate_verification_code_response = client::generate_verification_code(
             &mut env,
@@ -158,7 +153,7 @@ fn incorrect_code_increases_blocked_duration() {
 
         assert!(matches!(
             generate_verification_code_response,
-            GenerateVerificationCodeResponse::Blocked(ts) if ts == now + 1
+            GenerateVerificationCodeResponse::Blocked(duration) if duration == 1
         ));
 
         env.advance_time(Duration::from_millis(1));

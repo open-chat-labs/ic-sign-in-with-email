@@ -29,7 +29,7 @@ impl VerificationCodes {
         seed: Hash,
         code: String,
         now: TimestampMillis,
-    ) -> Result<(), TimestampMillis> {
+    ) -> Result<(), Milliseconds> {
         self.clear_expired(now);
 
         if let Some(existing) = self.codes.remove(&seed) {
@@ -38,8 +38,8 @@ impl VerificationCodes {
             }
         }
 
-        if let Some(blocked_until) = self.failed_attempts.blocked_until(&seed, now) {
-            Err(blocked_until)
+        if let Some(blocked_duration) = self.failed_attempts.blocked_duration(&seed, now) {
+            Err(blocked_duration)
         } else {
             self.codes.insert(seed, VerificationCode::new(code, now));
             Ok(())
@@ -63,14 +63,14 @@ impl VerificationCodes {
             Ok(())
         } else {
             let attempts_remaining = 3u32.saturating_sub(code.attempts.len() as u32);
-            let mut blocked_until = None;
+            let mut blocked_duration = None;
             if attempts_remaining == 0 {
                 self.codes.remove(&seed);
-                blocked_until = Some(self.failed_attempts.mark_failed_attempt(seed, now));
+                blocked_duration = Some(self.failed_attempts.mark_failed_attempt(seed, now));
             }
             Err(CheckVerificationCodeError::Incorrect(IncorrectCode {
                 attempts_remaining,
-                blocked_until,
+                blocked_duration,
             }))
         }
     }
@@ -92,21 +92,21 @@ impl VerificationCodes {
 }
 
 impl FailedAttemptsMap {
-    fn blocked_until(&self, seed: &Hash, now: TimestampMillis) -> Option<TimestampMillis> {
+    fn blocked_duration(&self, seed: &Hash, now: TimestampMillis) -> Option<Milliseconds> {
         self.map
             .get(seed)
-            .map(|f| f.blocked_until)
-            .filter(|ts| *ts > now)
+            .map(|f| f.blocked_duration(now))
+            .flatten()
     }
 
     fn remove(&mut self, seed: &Hash) {
         self.map.remove(seed);
     }
 
-    fn mark_failed_attempt(&mut self, seed: Hash, now: TimestampMillis) -> TimestampMillis {
+    fn mark_failed_attempt(&mut self, seed: Hash, now: TimestampMillis) -> Milliseconds {
         let failed_attempts = self.map.entry(seed).or_default();
         failed_attempts.mark_failed_attempt(now);
-        failed_attempts.blocked_until
+        failed_attempts.blocked_duration(now).unwrap_or_default()
     }
 }
 
@@ -154,6 +154,14 @@ impl FailedAttempts {
         };
 
         self.blocked_until = now + blocked_duration;
+    }
+
+    fn blocked_duration(&self, now: TimestampMillis) -> Option<Milliseconds> {
+        if self.blocked_until > now {
+            Some(self.blocked_until - now)
+        } else {
+            None
+        }
     }
 }
 

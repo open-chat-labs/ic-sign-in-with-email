@@ -10,7 +10,6 @@ mod identity;
 mod rng;
 mod setup;
 mod tests;
-mod utils;
 
 const CORRECT_CODE: &str = "123456";
 const INCORRECT_CODE: &str = "123457";
