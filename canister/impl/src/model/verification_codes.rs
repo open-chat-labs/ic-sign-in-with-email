@@ -67,7 +67,7 @@ impl VerificationCodes {
             self.failed_attempts.remove(email_str);
             Ok(())
         } else {
-            let attempts_remaining = 2u32.saturating_sub(code.attempts.len() as u32);
+            let attempts_remaining = 3u32.saturating_sub(code.attempts.len() as u32);
             let mut blocked_until = None;
             if attempts_remaining == 0 {
                 self.codes.remove(email_str);

@@ -1,9 +1,13 @@
+use crate::rng::random_principal;
+use crate::setup::setup_new_env;
+use crate::{canister_wasm, TestEnv};
 use candid::{CandidType, Principal};
 use pocket_ic::{PocketIc, UserError, WasmResult};
 use serde::de::DeserializeOwned;
 use sign_in_with_email_canister::{
     GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    GetDelegationResponse, InitArgs, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
+    SubmitVerificationCodeResponse, UpgradeArgs,
 };
 
 pub fn generate_verification_code(
@@ -31,6 +35,50 @@ pub fn get_delegation(
     args: &GetDelegationArgs,
 ) -> GetDelegationResponse {
     execute_query(env, sender, canister_id, "get_delegation", args)
+}
+
+pub fn install_canister() -> TestEnv {
+    let env = setup_new_env();
+    let controller = random_principal();
+    let wasm = canister_wasm();
+    let args = InitOrUpgradeArgs::Init(InitArgs { test_mode: true });
+
+    let canister_id = env.create_canister_with_settings(Some(controller), None);
+    env.add_cycles(canister_id, 1_000_000_000_000);
+    env.install_canister(
+        canister_id,
+        wasm,
+        candid::encode_one(args).unwrap(),
+        Some(controller),
+    );
+
+    // Tick twice to initialize the `salt`
+    env.tick();
+    env.tick();
+
+    TestEnv {
+        env,
+        canister_id,
+        controller,
+    }
+}
+
+pub fn upgrade_canister(
+    env: &mut PocketIc,
+    canister_id: Principal,
+    sender: Principal,
+    args: Option<UpgradeArgs>,
+) {
+    let wasm = canister_wasm();
+    let args = InitOrUpgradeArgs::Upgrade(args.unwrap_or_default());
+
+    env.upgrade_canister(
+        canister_id,
+        wasm,
+        candid::encode_one(args).unwrap(),
+        Some(sender),
+    )
+    .unwrap();
 }
 
 fn execute_query<P: CandidType, R: CandidType + DeserializeOwned>(
