@@ -1,14 +1,9 @@
 use email_address::EmailAddress;
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 
 #[derive(Clone)]
 pub struct ValidatedEmail(String);
-
-impl ValidatedEmail {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
 
 impl TryFrom<String> for ValidatedEmail {
     type Error = ();
@@ -21,6 +16,14 @@ impl TryFrom<String> for ValidatedEmail {
         } else {
             Err(())
         }
+    }
+}
+
+impl Deref for ValidatedEmail {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

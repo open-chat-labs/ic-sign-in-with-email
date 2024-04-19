@@ -127,8 +127,8 @@ impl State {
                     max_time_to_live,
                 ))
             }
-            Err(CheckVerificationCodeError::Incorrect) => {
-                SubmitVerificationCodeResponse::IncorrectCode
+            Err(CheckVerificationCodeError::Incorrect(ic)) => {
+                SubmitVerificationCodeResponse::IncorrectCode(ic)
             }
             Err(CheckVerificationCodeError::NotFound) => SubmitVerificationCodeResponse::NotFound,
         }

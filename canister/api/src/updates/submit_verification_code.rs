@@ -1,4 +1,4 @@
-use crate::{Nanoseconds, TimestampNanos};
+use crate::{Nanoseconds, TimestampMillis, TimestampNanos};
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
@@ -14,7 +14,7 @@ pub struct SubmitVerificationCodeArgs {
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum SubmitVerificationCodeResponse {
     Success(SubmitVerificationCodeSuccess),
-    IncorrectCode,
+    IncorrectCode(IncorrectCode),
     NotFound,
 }
 
@@ -23,4 +23,10 @@ pub struct SubmitVerificationCodeSuccess {
     #[serde(with = "serde_bytes")]
     pub user_key: Vec<u8>,
     pub expiration: TimestampNanos,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Debug)]
+pub struct IncorrectCode {
+    pub attempts_remaining: u32,
+    pub blocked_until: Option<TimestampMillis>,
 }
