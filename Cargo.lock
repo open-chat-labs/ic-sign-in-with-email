@@ -1895,7 +1895,7 @@ dependencies = [
 
 [[package]]
 name = "sign_in_with_email_canister"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "candid",
  "serde",
@@ -1904,7 +1904,7 @@ dependencies = [
 
 [[package]]
 name = "sign_in_with_email_canister_impl"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "base64 0.22.0",
  "candid",
