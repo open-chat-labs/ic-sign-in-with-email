@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Changed
+
+- Avoid storing any email addresses ([#6](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/6))
+
 ## [[0.3.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.3.0)] - 2024-04-19
 
 ### Changed

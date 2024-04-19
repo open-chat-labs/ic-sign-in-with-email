@@ -101,9 +101,10 @@ impl State {
         email: ValidatedEmail,
         code: String,
     ) -> GenerateVerificationCodeResponse {
+        let seed = self.calculate_seed(&email);
         let now = env::now();
 
-        match self.verification_codes.push(email, code, now) {
+        match self.verification_codes.push(seed, code, now) {
             Ok(()) => GenerateVerificationCodeResponse::Success,
             Err(blocked_until) => GenerateVerificationCodeResponse::Blocked(blocked_until),
         }
@@ -116,17 +117,15 @@ impl State {
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
     ) -> SubmitVerificationCodeResponse {
+        let seed = self.calculate_seed(&email);
         let now = env::now();
 
-        match self.verification_codes.check(&email, &code, now) {
-            Ok(_) => {
-                let seed = self.calculate_seed(&email);
-                SubmitVerificationCodeResponse::Success(self.prepare_delegation(
-                    seed,
-                    session_key,
-                    max_time_to_live,
-                ))
-            }
+        match self.verification_codes.check(seed, &code, now) {
+            Ok(_) => SubmitVerificationCodeResponse::Success(self.prepare_delegation(
+                seed,
+                session_key,
+                max_time_to_live,
+            )),
             Err(CheckVerificationCodeError::Incorrect(ic)) => {
                 SubmitVerificationCodeResponse::IncorrectCode(ic)
             }
@@ -139,8 +138,8 @@ impl State {
         email: ValidatedEmail,
         delegation: Delegation,
     ) -> GetDelegationResponse {
-        let message_hash = delegation_signature_msg_hash(&delegation);
         let seed = self.calculate_seed(&email);
+        let message_hash = delegation_signature_msg_hash(&delegation);
 
         if let Ok(signature) = self
             .signature_map
@@ -157,7 +156,7 @@ impl State {
 
     fn prepare_delegation(
         &mut self,
-        seed: [u8; 32],
+        seed: Hash,
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
     ) -> SubmitVerificationCodeSuccess {
