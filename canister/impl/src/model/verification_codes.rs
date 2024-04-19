@@ -1,5 +1,4 @@
-use crate::model::validated_email::ValidatedEmail;
-use crate::ONE_MINUTE;
+use crate::{Hash, ONE_MINUTE};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{IncorrectCode, Milliseconds, TimestampMillis};
 use std::collections::HashMap;
@@ -8,7 +7,7 @@ const VERIFICATION_CODE_TTL: Milliseconds = 5 * ONE_MINUTE; // 5 minutes
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct VerificationCodes {
-    codes: HashMap<String, VerificationCode>,
+    codes: HashMap<Hash, VerificationCode>,
     failed_attempts: FailedAttemptsMap,
 }
 
@@ -21,57 +20,53 @@ struct VerificationCode {
 
 #[derive(Serialize, Deserialize, Default)]
 struct FailedAttemptsMap {
-    map: HashMap<String, FailedAttempts>,
+    map: HashMap<Hash, FailedAttempts>,
 }
 
 impl VerificationCodes {
     pub fn push(
         &mut self,
-        email: ValidatedEmail,
+        seed: Hash,
         code: String,
         now: TimestampMillis,
     ) -> Result<(), TimestampMillis> {
         self.clear_expired(now);
 
-        if let Some(existing) = self.codes.remove(email.as_str()) {
+        if let Some(existing) = self.codes.remove(&seed) {
             if !existing.attempts.is_empty() {
-                self.failed_attempts
-                    .mark_failed_attempt(email.as_str(), now);
+                self.failed_attempts.mark_failed_attempt(seed, now);
             }
         }
 
-        if let Some(blocked_until) = self.failed_attempts.blocked_until(email.as_str(), now) {
+        if let Some(blocked_until) = self.failed_attempts.blocked_until(&seed, now) {
             Err(blocked_until)
         } else {
-            self.codes
-                .insert(email.into(), VerificationCode::new(code, now));
+            self.codes.insert(seed, VerificationCode::new(code, now));
             Ok(())
         }
     }
 
     pub fn check(
         &mut self,
-        email: &ValidatedEmail,
+        seed: Hash,
         attempt: &str,
         now: TimestampMillis,
     ) -> Result<(), CheckVerificationCodeError> {
         self.clear_expired(now);
 
-        let email_str = email.as_str();
-
-        let Some(code) = self.codes.get_mut(email_str) else {
+        let Some(code) = self.codes.get_mut(&seed) else {
             return Err(CheckVerificationCodeError::NotFound);
         };
 
         if code.check(attempt, now) {
-            self.failed_attempts.remove(email_str);
+            self.failed_attempts.remove(&seed);
             Ok(())
         } else {
             let attempts_remaining = 3u32.saturating_sub(code.attempts.len() as u32);
             let mut blocked_until = None;
             if attempts_remaining == 0 {
-                self.codes.remove(email_str);
-                blocked_until = Some(self.failed_attempts.mark_failed_attempt(email_str, now));
+                self.codes.remove(&seed);
+                blocked_until = Some(self.failed_attempts.mark_failed_attempt(seed, now));
             }
             Err(CheckVerificationCodeError::Incorrect(IncorrectCode {
                 attempts_remaining,
@@ -81,12 +76,12 @@ impl VerificationCodes {
     }
 
     fn clear_expired(&mut self, now: TimestampMillis) {
-        self.codes.retain(|e, c| {
+        self.codes.retain(|s, c| {
             let expiry = c.expiry();
             let expired = expiry < now;
             if expired {
                 if !c.attempts.is_empty() {
-                    self.failed_attempts.mark_failed_attempt(e.as_str(), expiry);
+                    self.failed_attempts.mark_failed_attempt(*s, expiry);
                 }
                 false
             } else {
@@ -97,19 +92,19 @@ impl VerificationCodes {
 }
 
 impl FailedAttemptsMap {
-    fn blocked_until(&self, email: &str, now: TimestampMillis) -> Option<TimestampMillis> {
+    fn blocked_until(&self, seed: &Hash, now: TimestampMillis) -> Option<TimestampMillis> {
         self.map
-            .get(email)
+            .get(seed)
             .map(|f| f.blocked_until)
             .filter(|ts| *ts > now)
     }
 
-    fn remove(&mut self, email: &str) {
-        self.map.remove(email);
+    fn remove(&mut self, seed: &Hash) {
+        self.map.remove(seed);
     }
 
-    fn mark_failed_attempt(&mut self, email: &str, now: TimestampMillis) -> TimestampMillis {
-        let failed_attempts = self.map.entry(email.to_string()).or_default();
+    fn mark_failed_attempt(&mut self, seed: Hash, now: TimestampMillis) -> TimestampMillis {
+        let failed_attempts = self.map.entry(seed).or_default();
         failed_attempts.mark_failed_attempt(now);
         failed_attempts.blocked_until
     }
