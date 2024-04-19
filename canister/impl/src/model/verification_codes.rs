@@ -1,3 +1,4 @@
+use crate::model::validated_email::ValidatedEmail;
 use crate::ONE_MINUTE;
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{Milliseconds, TimestampMillis};
@@ -21,7 +22,7 @@ struct VerificationCode {
 impl VerificationCodes {
     pub fn push(
         &mut self,
-        email: String,
+        email: ValidatedEmail,
         code: String,
         now: TimestampMillis,
     ) -> Result<(), TimestampMillis> {
@@ -29,35 +30,38 @@ impl VerificationCodes {
 
         if let Some(blocked_until) = self
             .failed_attempts
-            .get(&email)
+            .get(email.as_str())
             .map(|f| f.blocked_until)
             .filter(|ts| *ts > now)
         {
             Err(blocked_until)
         } else {
-            self.codes.insert(email, VerificationCode::new(code, now));
+            self.codes
+                .insert(email.into(), VerificationCode::new(code, now));
             Ok(())
         }
     }
 
     pub fn check(
         &mut self,
-        email: &str,
+        email: &ValidatedEmail,
         attempt: &str,
         now: TimestampMillis,
     ) -> Result<(), CheckVerificationCodeError> {
         self.clear_expired(now);
 
-        let Some(code) = self.codes.get_mut(email) else {
+        let email_str = email.as_str();
+
+        let Some(code) = self.codes.get_mut(email_str) else {
             return Err(CheckVerificationCodeError::NotFound);
         };
 
         if code.check(attempt, now) {
-            self.failed_attempts.remove(email);
+            self.failed_attempts.remove(email_str);
             Ok(())
         } else {
             if code.attempts.len() >= 3 {
-                self.codes.remove(email);
+                self.codes.remove(email_str);
                 self.failed_attempts
                     .entry(email.to_string())
                     .or_default()
