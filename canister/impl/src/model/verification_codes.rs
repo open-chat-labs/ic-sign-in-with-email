@@ -93,10 +93,7 @@ impl VerificationCodes {
 
 impl FailedAttemptsMap {
     fn blocked_duration(&self, seed: &Hash, now: TimestampMillis) -> Option<Milliseconds> {
-        self.map
-            .get(seed)
-            .map(|f| f.blocked_duration(now))
-            .flatten()
+        self.map.get(seed).and_then(|f| f.blocked_duration(now))
     }
 
     fn remove(&mut self, seed: &Hash) {
