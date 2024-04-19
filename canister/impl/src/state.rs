@@ -106,7 +106,7 @@ impl State {
 
         match self.verification_codes.push(seed, code, now) {
             Ok(()) => GenerateVerificationCodeResponse::Success,
-            Err(blocked_until) => GenerateVerificationCodeResponse::Blocked(blocked_until),
+            Err(blocked_duration) => GenerateVerificationCodeResponse::Blocked(blocked_duration),
         }
     }
 

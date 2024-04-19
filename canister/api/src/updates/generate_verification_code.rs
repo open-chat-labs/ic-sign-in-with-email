@@ -1,4 +1,4 @@
-use crate::TimestampMillis;
+use crate::Milliseconds;
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
@@ -10,7 +10,7 @@ pub struct GenerateVerificationCodeArgs {
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum GenerateVerificationCodeResponse {
     Success,
-    Blocked(TimestampMillis),
+    Blocked(Milliseconds),
     EmailInvalid,
     FailedToSendEmail(String),
 }

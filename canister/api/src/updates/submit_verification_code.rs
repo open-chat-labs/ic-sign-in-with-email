@@ -1,4 +1,4 @@
-use crate::{Nanoseconds, TimestampMillis, TimestampNanos};
+use crate::{Milliseconds, Nanoseconds, TimestampNanos};
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
@@ -28,5 +28,5 @@ pub struct SubmitVerificationCodeSuccess {
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct IncorrectCode {
     pub attempts_remaining: u32,
-    pub blocked_until: Option<TimestampMillis>,
+    pub blocked_duration: Option<Milliseconds>,
 }
