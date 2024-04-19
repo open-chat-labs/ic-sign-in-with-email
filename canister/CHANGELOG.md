@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+## [[0.3.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.3.0)] - 2024-04-19
+
+### Changed
+
+- Introduce `ValidatedEmail` type to force validation in all cases ([#3](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/3))
+- Mark codes with any failed attempts as failed when removed ([#4](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/4))
+
 ## [[0.2.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.2.0)] - 2024-04-17
 
 ### Added
