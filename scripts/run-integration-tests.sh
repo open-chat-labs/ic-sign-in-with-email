@@ -21,6 +21,7 @@ fi
 
 echo "Building canister wasm"
 cargo build --target wasm32-unknown-unknown --release -p sign_in_with_email_canister_impl --locked
+gzip -fk target/wasm32-unknown-unknown/release/sign_in_with_email_canister_impl.wasm
 
 cd integration_tests
 echo "PocketIC download starting"

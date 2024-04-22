@@ -168,5 +168,7 @@ fn upgrade_canister_succeeds() {
         controller,
     } = client::install_canister();
 
+    env.tick();
+
     client::upgrade_canister(&mut env, canister_id, controller, None);
 }
