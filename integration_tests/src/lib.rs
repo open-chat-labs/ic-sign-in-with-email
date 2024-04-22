@@ -44,5 +44,5 @@ fn canister_wasm_path() -> PathBuf {
     .join("target")
     .join("wasm32-unknown-unknown")
     .join("release")
-    .join("sign_in_with_email_canister_impl.wasm")
+    .join("sign_in_with_email_canister_impl.wasm.gz")
 }
