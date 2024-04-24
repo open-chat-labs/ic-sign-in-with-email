@@ -1,5 +1,6 @@
 use crate::email_sender::EmailSenderConfig;
 use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
+use crate::model::email_stats::EmailStatsMap;
 use crate::model::salt::Salt;
 use crate::model::validated_email::ValidatedEmail;
 use crate::model::verification_codes::{CheckVerificationCodeError, VerificationCodes};
@@ -12,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
     Delegation, GenerateVerificationCodeResponse, GetDelegationResponse, Nanoseconds,
     SignedDelegation, SubmitVerificationCodeResponse, SubmitVerificationCodeSuccess,
+    TimestampMillis,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -26,6 +28,8 @@ pub struct State {
     #[serde(skip)]
     signature_map: SignatureMap,
     email_sender_config: Option<EmailSenderConfig>,
+    #[serde(default)]
+    email_stats: EmailStatsMap,
     rsa_private_key: Option<RsaPrivateKey>,
     salt: Salt,
     test_mode: bool,
@@ -102,7 +106,7 @@ impl State {
         code: String,
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
-    ) -> GenerateVerificationCodeResponse {
+    ) -> (Hash, GenerateVerificationCodeResponse) {
         let seed = self.calculate_seed(&email);
         let now = env::now();
 
@@ -120,7 +124,8 @@ impl State {
         match self.verification_codes.push(seed, code, delegation, now) {
             Ok(()) => GenerateVerificationCodeResponse::Success,
             Err(blocked_duration) => GenerateVerificationCodeResponse::Blocked(blocked_duration),
-        }
+        };
+        (seed, response)
     }
 
     pub fn submit_verification_code(
@@ -133,9 +138,11 @@ impl State {
 
         match self.verification_codes.check(seed, &code, now) {
             Ok(delegation) => {
+                self.email_stats.record_code_submitted(seed, true, now);
                 SubmitVerificationCodeResponse::Success(self.prepare_delegation(seed, delegation))
             }
             Err(CheckVerificationCodeError::Incorrect(ic)) => {
+                self.email_stats.record_code_submitted(seed, false, now);
                 SubmitVerificationCodeResponse::IncorrectCode(ic)
             }
             Err(CheckVerificationCodeError::NotFound) => SubmitVerificationCodeResponse::NotFound,
@@ -161,6 +168,10 @@ impl State {
         } else {
             GetDelegationResponse::NotFound
         }
+    }
+
+    pub fn record_email_sent(&mut self, seed: Hash, now: TimestampMillis) {
+        self.email_stats.record_email_sent(seed, now)
     }
 
     fn prepare_delegation(
