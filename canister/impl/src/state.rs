@@ -121,7 +121,7 @@ impl State {
             expiration,
         };
 
-        match self.verification_codes.push(seed, code, delegation, now) {
+        let response = match self.verification_codes.push(seed, code, delegation, now) {
             Ok(()) => GenerateVerificationCodeResponse::Success,
             Err(blocked_duration) => GenerateVerificationCodeResponse::Blocked(blocked_duration),
         };
