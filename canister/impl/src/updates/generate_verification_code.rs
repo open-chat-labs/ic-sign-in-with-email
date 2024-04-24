@@ -22,8 +22,14 @@ async fn generate_verification_code(
         return EmailInvalid;
     };
 
-    let (seed, response) =
-        state::mutate(|s| s.store_verification_code(email.clone(), code.clone()));
+    let (seed, response) = state::mutate(|s| {
+        s.store_verification_code(
+            email.clone(),
+            code.clone(),
+            args.session_key,
+            args.max_time_to_live,
+        )
+    });
 
     if matches!(response, Success) {
         if let Err(error) = email_sender::send_verification_code_email(email, code).await {

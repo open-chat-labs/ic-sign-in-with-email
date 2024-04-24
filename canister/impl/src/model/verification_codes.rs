@@ -1,6 +1,7 @@
 use crate::{Hash, ONE_MINUTE};
 use serde::{Deserialize, Serialize};
-use sign_in_with_email_canister::{IncorrectCode, Milliseconds, TimestampMillis};
+use sign_in_with_email_canister::{Delegation, IncorrectCode, Milliseconds, TimestampMillis};
+use std::collections::hash_map::Entry::Occupied;
 use std::collections::HashMap;
 
 const VERIFICATION_CODE_TTL: Milliseconds = 5 * ONE_MINUTE; // 5 minutes
@@ -14,6 +15,7 @@ pub struct VerificationCodes {
 #[derive(Serialize, Deserialize)]
 struct VerificationCode {
     code: String,
+    delegation: Delegation,
     created: TimestampMillis,
     attempts: Vec<TimestampMillis>,
 }
@@ -28,6 +30,7 @@ impl VerificationCodes {
         &mut self,
         seed: Hash,
         code: String,
+        delegation: Delegation,
         now: TimestampMillis,
     ) -> Result<(), Milliseconds> {
         self.clear_expired(now);
@@ -41,7 +44,8 @@ impl VerificationCodes {
         if let Some(blocked_duration) = self.failed_attempts.blocked_duration(&seed, now) {
             Err(blocked_duration)
         } else {
-            self.codes.insert(seed, VerificationCode::new(code, now));
+            self.codes
+                .insert(seed, VerificationCode::new(code, delegation, now));
             Ok(())
         }
     }
@@ -51,28 +55,28 @@ impl VerificationCodes {
         seed: Hash,
         attempt: &str,
         now: TimestampMillis,
-    ) -> Result<(), CheckVerificationCodeError> {
+    ) -> Result<Delegation, CheckVerificationCodeError> {
         self.clear_expired(now);
 
-        let Some(code) = self.codes.get_mut(&seed) else {
-            return Err(CheckVerificationCodeError::NotFound);
-        };
-
-        if code.check(attempt, now) {
-            self.codes.remove(&seed);
-            self.failed_attempts.remove(&seed);
-            Ok(())
-        } else {
-            let attempts_remaining = 3u32.saturating_sub(code.attempts.len() as u32);
-            let mut blocked_duration = None;
-            if attempts_remaining == 0 {
-                self.codes.remove(&seed);
-                blocked_duration = Some(self.failed_attempts.mark_failed_attempt(seed, now));
+        if let Occupied(mut e) = self.codes.entry(seed) {
+            let code = e.get_mut();
+            if code.check(attempt, now) {
+                self.failed_attempts.remove(&seed);
+                Ok(e.remove().delegation)
+            } else {
+                let attempts_remaining = 3u32.saturating_sub(code.attempts.len() as u32);
+                let mut blocked_duration = None;
+                if attempts_remaining == 0 {
+                    self.codes.remove(&seed);
+                    blocked_duration = Some(self.failed_attempts.mark_failed_attempt(seed, now));
+                }
+                Err(CheckVerificationCodeError::Incorrect(IncorrectCode {
+                    attempts_remaining,
+                    blocked_duration,
+                }))
             }
-            Err(CheckVerificationCodeError::Incorrect(IncorrectCode {
-                attempts_remaining,
-                blocked_duration,
-            }))
+        } else {
+            Err(CheckVerificationCodeError::NotFound)
         }
     }
 
@@ -109,9 +113,10 @@ impl FailedAttemptsMap {
 }
 
 impl VerificationCode {
-    fn new(code: String, now: TimestampMillis) -> VerificationCode {
+    fn new(code: String, delegation: Delegation, now: TimestampMillis) -> VerificationCode {
         VerificationCode {
             code,
+            delegation,
             created: now,
             attempts: Vec::new(),
         }

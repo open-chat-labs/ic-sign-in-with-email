@@ -8,7 +8,11 @@ type EncryptedAwsEmailSenderConfig = record {
 type EncryptedEmailSenderConfig = variant {
   Aws : EncryptedAwsEmailSenderConfig;
 };
-type GenerateVerificationCodeArgs = record { email : text };
+type GenerateVerificationCodeArgs = record {
+  session_key : blob;
+  email : text;
+  max_time_to_live : opt nat64;
+};
 type GenerateVerificationCodeResponse = variant {
   Blocked : nat64;
   EmailInvalid;
@@ -28,12 +32,7 @@ type IncorrectCode = record {
 type InitArgs = record { test_mode : bool };
 type InitOrUpgradeArgs = variant { Upgrade : UpgradeArgs; Init : InitArgs };
 type SignedDelegation = record { signature : blob; delegation : Delegation };
-type SubmitVerificationCodeArgs = record {
-  session_key : blob;
-  code : text;
-  email : text;
-  max_time_to_live : opt nat64;
-};
+type SubmitVerificationCodeArgs = record { code : text; email : text };
 type SubmitVerificationCodeResponse = variant {
   NotFound;
   Success : SubmitVerificationCodeSuccess;

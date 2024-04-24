@@ -9,7 +9,5 @@ fn submit_verification_code(args: SubmitVerificationCodeArgs) -> SubmitVerificat
         return SubmitVerificationCodeResponse::NotFound;
     };
 
-    state::mutate(|s| {
-        s.submit_verification_code(email, args.code, args.session_key, args.max_time_to_live)
-    })
+    state::mutate(|s| s.submit_verification_code(email, args.code))
 }
