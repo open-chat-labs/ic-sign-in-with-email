@@ -100,11 +100,24 @@ impl State {
         &mut self,
         email: ValidatedEmail,
         code: String,
+        session_key: Vec<u8>,
+        max_time_to_live: Option<Nanoseconds>,
     ) -> GenerateVerificationCodeResponse {
         let seed = self.calculate_seed(&email);
         let now = env::now();
 
-        match self.verification_codes.push(seed, code, now) {
+        let delta = Nanoseconds::min(
+            max_time_to_live.unwrap_or(DEFAULT_EXPIRATION_PERIOD),
+            MAX_EXPIRATION_PERIOD,
+        );
+
+        let expiration = env::now_nanos().saturating_add(delta);
+        let delegation = Delegation {
+            pubkey: session_key,
+            expiration,
+        };
+
+        match self.verification_codes.push(seed, code, delegation, now) {
             Ok(()) => GenerateVerificationCodeResponse::Success,
             Err(blocked_duration) => GenerateVerificationCodeResponse::Blocked(blocked_duration),
         }
@@ -114,18 +127,14 @@ impl State {
         &mut self,
         email: ValidatedEmail,
         code: String,
-        session_key: Vec<u8>,
-        max_time_to_live: Option<Nanoseconds>,
     ) -> SubmitVerificationCodeResponse {
         let seed = self.calculate_seed(&email);
         let now = env::now();
 
         match self.verification_codes.check(seed, &code, now) {
-            Ok(_) => SubmitVerificationCodeResponse::Success(self.prepare_delegation(
-                seed,
-                session_key,
-                max_time_to_live,
-            )),
+            Ok(delegation) => {
+                SubmitVerificationCodeResponse::Success(self.prepare_delegation(seed, delegation))
+            }
             Err(CheckVerificationCodeError::Incorrect(ic)) => {
                 SubmitVerificationCodeResponse::IncorrectCode(ic)
             }
@@ -157,19 +166,8 @@ impl State {
     fn prepare_delegation(
         &mut self,
         seed: Hash,
-        session_key: Vec<u8>,
-        max_time_to_live: Option<Nanoseconds>,
+        delegation: Delegation,
     ) -> SubmitVerificationCodeSuccess {
-        let delta = Nanoseconds::min(
-            max_time_to_live.unwrap_or(DEFAULT_EXPIRATION_PERIOD),
-            MAX_EXPIRATION_PERIOD,
-        );
-
-        let expiration = env::now_nanos().saturating_add(delta);
-        let delegation = Delegation {
-            pubkey: session_key,
-            expiration,
-        };
         let msg_hash = delegation_signature_msg_hash(&delegation);
 
         self.signature_map.add_signature(&seed, msg_hash);
@@ -177,7 +175,7 @@ impl State {
 
         SubmitVerificationCodeSuccess {
             user_key: self.der_encode_canister_sig_key(seed),
-            expiration,
+            expiration: delegation.expiration,
         }
     }
 

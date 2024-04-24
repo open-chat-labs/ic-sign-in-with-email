@@ -28,6 +28,8 @@ fn end_to_end(correct_code: bool) {
         canister_id,
         &GenerateVerificationCodeArgs {
             email: email.to_string(),
+            session_key: identity.public_key().unwrap(),
+            max_time_to_live: None,
         },
     );
 
@@ -48,8 +50,6 @@ fn end_to_end(correct_code: bool) {
                 INCORRECT_CODE
             })
             .to_string(),
-            session_key: identity.public_key().unwrap(),
-            max_time_to_live: None,
         },
     );
 
@@ -102,6 +102,8 @@ fn incorrect_code_increases_blocked_duration() {
             canister_id,
             &GenerateVerificationCodeArgs {
                 email: email.to_string(),
+                session_key: identity.public_key().unwrap(),
+                max_time_to_live: None,
             },
         );
 
@@ -118,8 +120,6 @@ fn incorrect_code_increases_blocked_duration() {
                 &SubmitVerificationCodeArgs {
                     email: email.to_string(),
                     code: INCORRECT_CODE.to_string(),
-                    session_key: identity.public_key().unwrap(),
-                    max_time_to_live: None,
                 },
             );
 
@@ -148,6 +148,8 @@ fn incorrect_code_increases_blocked_duration() {
             canister_id,
             &GenerateVerificationCodeArgs {
                 email: email.to_string(),
+                session_key: identity.public_key().unwrap(),
+                max_time_to_live: None,
             },
         );
 

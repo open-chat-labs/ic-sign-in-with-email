@@ -1,4 +1,4 @@
-use crate::{Milliseconds, Nanoseconds, TimestampNanos};
+use crate::{Milliseconds, TimestampNanos};
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
@@ -6,9 +6,6 @@ use serde::Serialize;
 pub struct SubmitVerificationCodeArgs {
     pub email: String,
     pub code: String,
-    #[serde(with = "serde_bytes")]
-    pub session_key: Vec<u8>,
-    pub max_time_to_live: Option<Nanoseconds>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
