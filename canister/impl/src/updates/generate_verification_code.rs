@@ -1,5 +1,5 @@
 use crate::model::validated_email::ValidatedEmail;
-use crate::{email_sender, rng, state};
+use crate::{email_sender, env, rng, state};
 use ic_cdk::update;
 use sign_in_with_email_canister::{
     GenerateVerificationCodeArgs, GenerateVerificationCodeResponse,
@@ -22,11 +22,14 @@ async fn generate_verification_code(
         return EmailInvalid;
     };
 
-    let response = state::mutate(|s| s.store_verification_code(email.clone(), code.clone()));
+    let (seed, response) =
+        state::mutate(|s| s.store_verification_code(email.clone(), code.clone()));
 
     if matches!(response, Success) {
         if let Err(error) = email_sender::send_verification_code_email(email, code).await {
             return FailedToSendEmail(error);
+        } else {
+            state::mutate(|s| s.record_email_sent(seed, env::now()));
         }
     }
 
