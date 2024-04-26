@@ -4,8 +4,8 @@ use crate::model::email_stats::EmailStatsMap;
 use crate::model::salt::Salt;
 use crate::model::validated_email::ValidatedEmail;
 use crate::{
-    env, Hash, DEFAULT_SESSION_EXPIRATION_PERIOD, MAGIC_LINK_EXPIRATION_PERIOD,
-    MAX_SESSION_EXPIRATION_PERIOD,
+    env, Hash, DEFAULT_SESSION_EXPIRATION_PERIOD, MAX_SESSION_EXPIRATION_PERIOD,
+    NANOS_PER_MILLISECOND,
 };
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
@@ -107,31 +107,23 @@ impl State {
         email: ValidatedEmail,
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
+        now: TimestampMillis,
     ) -> MagicLink {
         let seed = self.calculate_seed(&email);
-        let now = env::now();
 
         let delta = Nanoseconds::min(
             max_time_to_live.unwrap_or(DEFAULT_SESSION_EXPIRATION_PERIOD),
             MAX_SESSION_EXPIRATION_PERIOD,
         );
 
-        let expiration = env::now_nanos().saturating_add(delta);
+        let now_nanos = now * NANOS_PER_MILLISECOND;
+        let expiration = now_nanos.saturating_add(delta);
         let delegation = Delegation {
             pubkey: session_key,
             expiration,
         };
 
         MagicLink::new(seed, delegation, now)
-    }
-
-    pub fn verify_magic_link(&self, signed_magic_link: SignedMagicLink) -> bool {
-        if let Ok(magic_link) = self.unwrap_magic_link(signed_magic_link) {
-            let now = env::now();
-            magic_link.created() + MAGIC_LINK_EXPIRATION_PERIOD > now
-        } else {
-            false
-        }
     }
 
     pub fn unwrap_magic_link(
@@ -156,6 +148,15 @@ impl State {
             .link()
             .decrypt(private_key)
             .map_err(|_| "Decryption failed".to_string())
+    }
+
+    pub fn process_magic_link(&mut self, magic_link: MagicLink, now: TimestampMillis) -> bool {
+        if magic_link.expired(now) {
+            self.prepare_delegation(magic_link.seed(), magic_link.delegation().clone());
+            true
+        } else {
+            false
+        }
     }
 
     pub fn get_delegation(

@@ -4,8 +4,10 @@ use rsa::sha2::Sha256;
 use rsa::signature::Verifier;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
-use sign_in_with_email_canister::{Delegation, TimestampMillis};
+use sign_in_with_email_canister::{Delegation, Milliseconds, TimestampMillis};
 use std::fmt::{Display, Formatter};
+
+const MAGIC_LINK_EXPIRATION: Milliseconds = 10 * 60 * 1000; // 10 minutes
 
 #[derive(Serialize, Deserialize)]
 pub struct MagicLink {
@@ -45,6 +47,10 @@ impl MagicLink {
 
     pub fn delegation(&self) -> &Delegation {
         &self.delegation
+    }
+
+    pub fn expired(&self, now: TimestampMillis) -> bool {
+        self.created + MAGIC_LINK_EXPIRATION < now
     }
 }
 
