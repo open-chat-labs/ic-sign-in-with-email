@@ -8,12 +8,12 @@ type EncryptedAwsEmailSenderConfig = record {
 type EncryptedEmailSenderConfig = variant {
   Aws : EncryptedAwsEmailSenderConfig;
 };
-type GenerateVerificationCodeArgs = record {
+type GenerateMagicLinkArgs = record {
   session_key : blob;
   email : text;
   max_time_to_live : opt nat64;
 };
-type GenerateVerificationCodeResponse = variant {
+type GenerateMagicLinkResponse = variant {
   Blocked : nat64;
   EmailInvalid;
   FailedToSendEmail : text;
@@ -46,8 +46,8 @@ type UpgradeArgs = record {
   email_sender_config : opt EncryptedEmailSenderConfig;
 };
 service : (InitOrUpgradeArgs) -> {
-  generate_verification_code : (GenerateVerificationCodeArgs) -> (
-      GenerateVerificationCodeResponse,
+  generate_magic_link : (GenerateMagicLinkArgs) -> (
+      GenerateMagicLinkResponse,
     );
   get_delegation : (GetDelegationArgs) -> (GetDelegationResponse) query;
   rsa_public_key : () -> (opt text) query;

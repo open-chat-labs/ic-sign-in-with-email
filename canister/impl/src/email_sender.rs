@@ -4,6 +4,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use candid::{CandidType, Deserialize};
 use email_sender_core::EmailSender;
+use magic_links::EncryptedMagicLink;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 use serde::Serialize;
 use sign_in_with_email_canister::{EncryptedAwsEmailSenderConfig, EncryptedEmailSenderConfig};
@@ -37,15 +38,15 @@ pub fn init(email_sender: impl EmailSender + 'static) {
         .unwrap_or_else(|_| panic!("Email sender already set"));
 }
 
-pub async fn send_verification_code_email(
+pub async fn send_magic_link(
     email: ValidatedEmail,
-    code: String,
+    magic_link: EncryptedMagicLink,
 ) -> Result<(), String> {
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
     let idempotency_id = rng::gen();
 
     sender
-        .send(email.into(), code, idempotency_id, env::now())
+        .send(email.into(), magic_link, idempotency_id, env::now())
         .await
 }
 
@@ -65,6 +66,12 @@ impl EmailSenderConfig {
             }
         }
     }
+
+    pub fn rsa_public_key_pem(&self) -> &str {
+        match self {
+            EmailSenderConfig::Aws(c) => &c.rsa_public_key_pem,
+        }
+    }
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
@@ -73,6 +80,7 @@ pub struct AwsEmailSenderConfig {
     pub target_arn: String,
     pub access_key: String,
     pub secret_key: String,
+    pub rsa_public_key_pem: String,
 }
 
 impl AwsEmailSenderConfig {
@@ -85,6 +93,7 @@ impl AwsEmailSenderConfig {
             target_arn: config.target_arn,
             access_key: decrypt(&config.access_key_encrypted, &rsa_private_key),
             secret_key: decrypt(&config.secret_key_encrypted, &rsa_private_key),
+            rsa_public_key_pem: config.rsa_public_key_pem,
         }
     }
 }

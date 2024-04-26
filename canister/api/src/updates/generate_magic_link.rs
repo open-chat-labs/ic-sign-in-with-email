@@ -3,7 +3,7 @@ use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub struct GenerateVerificationCodeArgs {
+pub struct GenerateMagicLinkArgs {
     pub email: String,
     #[serde(with = "serde_bytes")]
     pub session_key: Vec<u8>,
@@ -11,7 +11,7 @@ pub struct GenerateVerificationCodeArgs {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
-pub enum GenerateVerificationCodeResponse {
+pub enum GenerateMagicLinkResponse {
     Success,
     Blocked(Milliseconds),
     EmailInvalid,

@@ -3,8 +3,8 @@ use crate::rng::random_principal;
 use crate::{client, TestEnv, CORRECT_CODE, INCORRECT_CODE};
 use ic_agent::Identity;
 use sign_in_with_email_canister::{
-    GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
+    SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
 };
 use std::time::Duration;
 use test_case::test_case;
@@ -22,11 +22,11 @@ fn end_to_end(correct_code: bool) {
     let email = "blah@blah.com";
     let identity = create_session_identity();
 
-    let generate_verification_code_response = client::generate_verification_code(
+    let generate_magic_link_response = client::generate_magic_link(
         &mut env,
         sender,
         canister_id,
-        &GenerateVerificationCodeArgs {
+        &GenerateMagicLinkArgs {
             email: email.to_string(),
             session_key: identity.public_key().unwrap(),
             max_time_to_live: None,
@@ -34,8 +34,8 @@ fn end_to_end(correct_code: bool) {
     );
 
     assert!(matches!(
-        generate_verification_code_response,
-        GenerateVerificationCodeResponse::Success
+        generate_magic_link_response,
+        GenerateMagicLinkResponse::Success
     ));
 
     let submit_verification_code_response = client::submit_verification_code(
@@ -96,11 +96,11 @@ fn incorrect_code_increases_blocked_duration() {
     let mut previous_blocked_duration = 0;
 
     for _ in 0..5 {
-        let generate_verification_code_response = client::generate_verification_code(
+        let generate_magic_link_response = client::generate_magic_link(
             &mut env,
             sender,
             canister_id,
-            &GenerateVerificationCodeArgs {
+            &GenerateMagicLinkArgs {
                 email: email.to_string(),
                 session_key: identity.public_key().unwrap(),
                 max_time_to_live: None,
@@ -108,8 +108,8 @@ fn incorrect_code_increases_blocked_duration() {
         );
 
         assert!(matches!(
-            generate_verification_code_response,
-            GenerateVerificationCodeResponse::Success
+            generate_magic_link_response,
+            GenerateMagicLinkResponse::Success
         ));
 
         for attempt in 1..=3 {
@@ -142,11 +142,11 @@ fn incorrect_code_increases_blocked_duration() {
 
         env.advance_time(Duration::from_millis(previous_blocked_duration - 1));
 
-        let generate_verification_code_response = client::generate_verification_code(
+        let generate_magic_link_response = client::generate_magic_link(
             &mut env,
             sender,
             canister_id,
-            &GenerateVerificationCodeArgs {
+            &GenerateMagicLinkArgs {
                 email: email.to_string(),
                 session_key: identity.public_key().unwrap(),
                 max_time_to_live: None,
@@ -154,8 +154,8 @@ fn incorrect_code_increases_blocked_duration() {
         );
 
         assert!(matches!(
-            generate_verification_code_response,
-            GenerateVerificationCodeResponse::Blocked(duration) if duration == 1
+            generate_magic_link_response,
+            GenerateMagicLinkResponse::Blocked(duration) if duration == 1
         ));
 
         env.advance_time(Duration::from_millis(1));

@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 async-trait.workspace = true
+magic_links.path = "../../libraries/magic_links"

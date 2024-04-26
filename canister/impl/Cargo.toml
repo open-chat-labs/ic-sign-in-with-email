@@ -17,15 +17,20 @@ email_address.workspace = true
 email_sender_aws = { path = "../../email_sender/aws", optional = true }
 email_sender_core.path = "../../email_sender/core"
 getrandom.workspace = true
+hex.workspace = true
 ic-cdk.workspace = true
 ic-cdk-timers.workspace = true
 ic-certification.workspace = true
+ic-http-certification.workspace = true
 ic-stable-structures.workspace = true
+magic_links.path = "../../libraries/magic_links"
+querystring.workspace = true
 rand.workspace = true
 rmp-serde.workspace = true
 rsa = { workspace = true, features = ["serde"] }
 serde.workspace = true
 serde_bytes.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 sign_in_with_email_canister.path = "../api"
 

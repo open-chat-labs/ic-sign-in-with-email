@@ -4,6 +4,7 @@ use http::HeaderMap;
 use ic_cdk::api::management_canister::http_request::{
     CanisterHttpRequestArgument, HttpHeader, HttpMethod,
 };
+use magic_links::EncryptedMagicLink;
 use serde::Serialize;
 use time::format_description::BorrowedFormatItem;
 use time::macros::format_description;
@@ -37,7 +38,7 @@ impl AwsEmailSender {
     fn build_args(
         &self,
         email: String,
-        code: String,
+        magic_link: EncryptedMagicLink,
         idempotency_id: u64,
         now_millis: u64,
     ) -> CanisterHttpRequestArgument {
@@ -60,7 +61,11 @@ impl AwsEmailSender {
         );
 
         let message_deduplication_id = idempotency_id.to_string();
-        let message = serde_json::to_string(&EmailAndCode { email, code }).unwrap();
+        let message = serde_json::to_string(&EmailAndMagicLink {
+            email,
+            magic_link: magic_link.to_string(),
+        })
+        .unwrap();
 
         let body = [
             ("Action", "Publish"),
@@ -106,9 +111,9 @@ impl AwsEmailSender {
 }
 
 #[derive(Serialize)]
-struct EmailAndCode {
+struct EmailAndMagicLink {
     email: String,
-    code: String,
+    magic_link: String,
 }
 
 #[async_trait]
@@ -116,11 +121,11 @@ impl EmailSender for AwsEmailSender {
     async fn send(
         &self,
         email: String,
-        code: String,
+        magic_link: EncryptedMagicLink,
         idempotency_id: u64,
         now_millis: u64,
     ) -> Result<(), String> {
-        let args = self.build_args(email, code, idempotency_id, now_millis);
+        let args = self.build_args(email, magic_link, idempotency_id, now_millis);
 
         let resp =
             ic_cdk::api::management_canister::http_request::http_request(args, 1_000_000_000)

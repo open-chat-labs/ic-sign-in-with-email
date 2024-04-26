@@ -39,4 +39,5 @@ pub struct EncryptedAwsEmailSenderConfig {
     pub target_arn: String,
     pub access_key_encrypted: String,
     pub secret_key_encrypted: String,
+    pub rsa_public_key_pem: String,
 }

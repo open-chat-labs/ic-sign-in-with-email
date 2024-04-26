@@ -5,18 +5,18 @@ use candid::{CandidType, Principal};
 use pocket_ic::{PocketIc, UserError, WasmResult};
 use serde::de::DeserializeOwned;
 use sign_in_with_email_canister::{
-    GenerateVerificationCodeArgs, GenerateVerificationCodeResponse, GetDelegationArgs,
-    GetDelegationResponse, InitArgs, InitOrUpgradeArgs, SubmitVerificationCodeArgs,
-    SubmitVerificationCodeResponse, UpgradeArgs,
+    GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
+    InitArgs, InitOrUpgradeArgs, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    UpgradeArgs,
 };
 
-pub fn generate_verification_code(
+pub fn generate_magic_link(
     env: &mut PocketIc,
     sender: Principal,
     canister_id: Principal,
-    args: &GenerateVerificationCodeArgs,
-) -> GenerateVerificationCodeResponse {
-    execute_update(env, sender, canister_id, "generate_verification_code", args)
+    args: &GenerateMagicLinkArgs,
+) -> GenerateMagicLinkResponse {
+    execute_update(env, sender, canister_id, "generate_magic_link", args)
 }
 
 pub fn submit_verification_code(

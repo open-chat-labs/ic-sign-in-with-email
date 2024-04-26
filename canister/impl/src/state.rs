@@ -3,17 +3,20 @@ use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
 use crate::model::email_stats::EmailStatsMap;
 use crate::model::salt::Salt;
 use crate::model::validated_email::ValidatedEmail;
-use crate::model::verification_codes::{CheckVerificationCodeError, VerificationCodes};
-use crate::{env, Hash, DEFAULT_EXPIRATION_PERIOD, MAX_EXPIRATION_PERIOD};
+use crate::{
+    env, Hash, DEFAULT_SESSION_EXPIRATION_PERIOD, MAGIC_LINK_EXPIRATION_PERIOD,
+    MAX_SESSION_EXPIRATION_PERIOD,
+};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
+use magic_links::{MagicLink, SignedMagicLink};
+use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GenerateVerificationCodeResponse, GetDelegationResponse, Nanoseconds,
-    SignedDelegation, SubmitVerificationCodeResponse, SubmitVerificationCodeSuccess,
-    TimestampMillis,
+    Delegation, GetDelegationResponse, Nanoseconds, SignedDelegation,
+    SubmitVerificationCodeSuccess, TimestampMillis,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -24,7 +27,6 @@ thread_local! {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct State {
-    verification_codes: VerificationCodes,
     #[serde(skip)]
     signature_map: SignatureMap,
     email_sender_config: Option<EmailSenderConfig>,
@@ -100,19 +102,18 @@ impl State {
         self.test_mode
     }
 
-    pub fn store_verification_code(
-        &mut self,
+    pub fn generate_magic_link(
+        &self,
         email: ValidatedEmail,
-        code: String,
         session_key: Vec<u8>,
         max_time_to_live: Option<Nanoseconds>,
-    ) -> (Hash, GenerateVerificationCodeResponse) {
+    ) -> MagicLink {
         let seed = self.calculate_seed(&email);
         let now = env::now();
 
         let delta = Nanoseconds::min(
-            max_time_to_live.unwrap_or(DEFAULT_EXPIRATION_PERIOD),
-            MAX_EXPIRATION_PERIOD,
+            max_time_to_live.unwrap_or(DEFAULT_SESSION_EXPIRATION_PERIOD),
+            MAX_SESSION_EXPIRATION_PERIOD,
         );
 
         let expiration = env::now_nanos().saturating_add(delta);
@@ -121,32 +122,40 @@ impl State {
             expiration,
         };
 
-        let response = match self.verification_codes.push(seed, code, delegation, now) {
-            Ok(()) => GenerateVerificationCodeResponse::Success,
-            Err(blocked_duration) => GenerateVerificationCodeResponse::Blocked(blocked_duration),
-        };
-        (seed, response)
+        MagicLink::new(seed, delegation, now)
     }
 
-    pub fn submit_verification_code(
-        &mut self,
-        email: ValidatedEmail,
-        code: String,
-    ) -> SubmitVerificationCodeResponse {
-        let seed = self.calculate_seed(&email);
-        let now = env::now();
-
-        match self.verification_codes.check(seed, &code, now) {
-            Ok(delegation) => {
-                self.email_stats.record_code_submitted(seed, true, now);
-                SubmitVerificationCodeResponse::Success(self.prepare_delegation(seed, delegation))
-            }
-            Err(CheckVerificationCodeError::Incorrect(ic)) => {
-                self.email_stats.record_code_submitted(seed, false, now);
-                SubmitVerificationCodeResponse::IncorrectCode(ic)
-            }
-            Err(CheckVerificationCodeError::NotFound) => SubmitVerificationCodeResponse::NotFound,
+    pub fn verify_magic_link(&self, signed_magic_link: SignedMagicLink) -> bool {
+        if let Ok(magic_link) = self.unwrap_magic_link(signed_magic_link) {
+            let now = env::now();
+            magic_link.created() + MAGIC_LINK_EXPIRATION_PERIOD > now
+        } else {
+            false
         }
+    }
+
+    pub fn unwrap_magic_link(
+        &self,
+        signed_magic_link: SignedMagicLink,
+    ) -> Result<MagicLink, String> {
+        let email_sender_rsa_public_key_pem = self
+            .email_sender_config
+            .as_ref()
+            .map(|c| c.rsa_public_key_pem())
+            .unwrap();
+
+        let email_sender_public_key =
+            RsaPublicKey::from_pkcs1_pem(email_sender_rsa_public_key_pem).unwrap();
+
+        if !signed_magic_link.verify(email_sender_public_key) {
+            return Err("Invalid signature".to_string());
+        }
+
+        let private_key = self.rsa_private_key.clone().unwrap();
+        signed_magic_link
+            .link()
+            .decrypt(private_key)
+            .map_err(|_| "Decryption failed".to_string())
     }
 
     pub fn get_delegation(
