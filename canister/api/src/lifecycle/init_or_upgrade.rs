@@ -26,7 +26,8 @@ impl InitOrUpgradeArgs {
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct InitArgs {
-    pub test_mode: bool,
+    // Only use this for testing
+    pub salt: Option<[u8; 32]>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Default)]

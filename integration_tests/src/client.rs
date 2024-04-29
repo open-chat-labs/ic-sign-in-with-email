@@ -1,6 +1,6 @@
 use crate::rng::random_principal;
 use crate::setup::setup_new_env;
-use crate::{canister_wasm, TestEnv};
+use crate::{canister_wasm, TestEnv, TEST_SALT};
 use candid::{CandidType, Principal};
 use pocket_ic::{PocketIc, UserError, WasmResult};
 use serde::de::DeserializeOwned;
@@ -41,7 +41,9 @@ pub fn install_canister() -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let args = InitOrUpgradeArgs::Init(InitArgs { test_mode: true });
+    let args = InitOrUpgradeArgs::Init(InitArgs {
+        salt: Some(TEST_SALT),
+    });
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);
@@ -51,9 +53,6 @@ pub fn install_canister() -> TestEnv {
         candid::encode_one(args).unwrap(),
         Some(controller),
     );
-
-    // Tick twice to initialize the `salt`
-    env.tick();
     env.tick();
 
     TestEnv {
@@ -71,6 +70,11 @@ pub fn upgrade_canister(
 ) {
     let wasm = canister_wasm();
     let args = InitOrUpgradeArgs::Upgrade(args.unwrap_or_default());
+
+    // Tick a few times otherwise the upgrade is rate limited
+    for _ in 0..20 {
+        env.tick();
+    }
 
     env.upgrade_canister(
         canister_id,
