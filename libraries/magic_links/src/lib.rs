@@ -120,7 +120,7 @@ pub struct SignedMagicLink {
 }
 
 impl SignedMagicLink {
-    pub fn new_from_hex_strings(
+    pub fn from_hex_strings(
         ciphertext: &str,
         encrypted_key: &str,
         nonce: &str,

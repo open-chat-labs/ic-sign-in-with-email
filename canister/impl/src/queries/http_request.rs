@@ -20,7 +20,7 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
     };
 
     match path.as_str() {
-        "auth" => {
+        "/auth" => {
             let query = request.get_query().unwrap().unwrap_or_default();
             let params = querystring::querify(&query);
             let ciphertext = get_query_param_value(&params, "c").unwrap();
@@ -28,12 +28,8 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
             let nonce = get_query_param_value(&params, "n").unwrap();
             let signature = get_query_param_value(&params, "s").unwrap();
 
-            let signed_magic_link = SignedMagicLink::new_from_hex_strings(
-                &ciphertext,
-                &encrypted_key,
-                &nonce,
-                &signature,
-            );
+            let signed_magic_link =
+                SignedMagicLink::from_hex_strings(&ciphertext, &encrypted_key, &nonce, &signature);
 
             if let Ok(magic_link) = state::read(|s| s.unwrap_magic_link(signed_magic_link)) {
                 if update {
