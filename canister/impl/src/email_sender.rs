@@ -1,4 +1,3 @@
-use crate::model::validated_email::ValidatedEmail;
 use crate::{env, rng};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -8,6 +7,7 @@ use magic_links::EncryptedMagicLink;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 use serde::Serialize;
 use sign_in_with_email_canister::{EncryptedAwsEmailSenderConfig, EncryptedEmailSenderConfig};
+use sign_in_with_email_canister_utils::ValidatedEmail;
 use std::sync::OnceLock;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
@@ -66,12 +66,6 @@ impl EmailSenderConfig {
             }
         }
     }
-
-    pub fn rsa_public_key_pem(&self) -> &str {
-        match self {
-            EmailSenderConfig::Aws(c) => &c.rsa_public_key_pem,
-        }
-    }
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
@@ -80,7 +74,6 @@ pub struct AwsEmailSenderConfig {
     pub target_arn: String,
     pub access_key: String,
     pub secret_key: String,
-    pub rsa_public_key_pem: String,
 }
 
 impl AwsEmailSenderConfig {
@@ -93,7 +86,6 @@ impl AwsEmailSenderConfig {
             target_arn: config.target_arn,
             access_key: decrypt(&config.access_key_encrypted, &rsa_private_key),
             secret_key: decrypt(&config.secret_key_encrypted, &rsa_private_key),
-            rsa_public_key_pem: config.rsa_public_key_pem,
         }
     }
 }

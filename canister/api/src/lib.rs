@@ -9,6 +9,7 @@ pub use lifecycle::*;
 pub use queries::*;
 pub use updates::*;
 
+pub type Hash = [u8; 32];
 pub type Milliseconds = u64;
 pub type Nanoseconds = u64;
 pub type TimestampMillis = u64;
@@ -39,5 +40,4 @@ pub struct EncryptedAwsEmailSenderConfig {
     pub target_arn: String,
     pub access_key_encrypted: String,
     pub secret_key_encrypted: String,
-    pub rsa_public_key_pem: String,
 }

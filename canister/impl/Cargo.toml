@@ -29,10 +29,8 @@ rand.workspace = true
 rmp-serde.workspace = true
 rsa = { workspace = true, features = ["serde"] }
 serde.workspace = true
-serde_bytes.workspace = true
-serde_json.workspace = true
-sha2.workspace = true
 sign_in_with_email_canister.path = "../api"
+sign_in_with_email_canister_utils.path = "../utils"
 
 [features]
 default = ["aws"]

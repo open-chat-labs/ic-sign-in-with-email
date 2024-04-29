@@ -1,17 +1,19 @@
 use crate::identity::create_session_identity;
 use crate::rng::random_principal;
-use crate::{client, TestEnv, CORRECT_CODE, INCORRECT_CODE};
+use crate::rsa::generate_rsa_private_key_from_seed;
+use crate::{client, TestEnv, EMAIL_SENDER_RSA_SEED, TEST_SALT};
 use ic_agent::Identity;
+use ic_http_certification::HttpRequest;
+use magic_links::MagicLink;
+use rand::thread_rng;
 use sign_in_with_email_canister::{
-    GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
-    SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
+    Delegation, GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs,
+    GetDelegationResponse,
 };
-use std::time::Duration;
-use test_case::test_case;
+use sign_in_with_email_canister_utils::ValidatedEmail;
 
-#[test_case(true)]
-#[test_case(false)]
-fn end_to_end(correct_code: bool) {
+#[test]
+fn end_to_end() {
     let TestEnv {
         mut env,
         canister_id,
@@ -33,37 +35,45 @@ fn end_to_end(correct_code: bool) {
         },
     );
 
-    assert!(matches!(
-        generate_magic_link_response,
-        GenerateMagicLinkResponse::Success
-    ));
-
-    let submit_verification_code_response = client::submit_verification_code(
-        &mut env,
-        sender,
-        canister_id,
-        &SubmitVerificationCodeArgs {
-            email: email.to_string(),
-            code: (if correct_code {
-                CORRECT_CODE
-            } else {
-                INCORRECT_CODE
-            })
-            .to_string(),
-        },
-    );
-
-    if !correct_code {
-        assert!(matches!(
-            submit_verification_code_response,
-            SubmitVerificationCodeResponse::IncorrectCode(_)
-        ));
-        return;
-    }
-
-    let SubmitVerificationCodeResponse::Success(result) = submit_verification_code_response else {
-        panic!("{submit_verification_code_response:?}");
+    let GenerateMagicLinkResponse::Success(generate_magic_link_success) =
+        generate_magic_link_response
+    else {
+        panic!();
     };
+
+    let seed = sign_in_with_email_canister_utils::calculate_seed(
+        TEST_SALT,
+        &ValidatedEmail::try_from(email.to_string()).unwrap(),
+    );
+    let delegation = Delegation {
+        pubkey: generate_magic_link_success.user_key,
+        expiration: generate_magic_link_success.expiration,
+    };
+    let magic_link = MagicLink::new(seed, delegation, generate_magic_link_success.created);
+    let private_key = generate_rsa_private_key_from_seed(TEST_SALT);
+    let encrypted = magic_link.encrypt(private_key.to_public_key(), &mut thread_rng());
+    let signed = encrypted.sign(generate_rsa_private_key_from_seed(EMAIL_SENDER_RSA_SEED));
+
+    let http_request = HttpRequest {
+        method: "GET".to_string(),
+        url: format!(
+            "/auth?c={}&k={}&n={}&s={}",
+            signed.ciphertext_string(),
+            signed.encrypted_key_string(),
+            signed.nonce_string(),
+            signed.signature_string()
+        ),
+        headers: Vec::new(),
+        body: Vec::new(),
+    };
+
+    let http_response = client::http_request(&env, sender, canister_id, &http_request);
+
+    assert!(http_response.upgrade.unwrap());
+
+    let http_response = client::http_request_update(&mut env, sender, canister_id, &http_request);
+
+    assert_eq!(http_response.status_code, 200);
 
     let get_delegation_response = client::get_delegation(
         &env,
@@ -72,7 +82,7 @@ fn end_to_end(correct_code: bool) {
         &GetDelegationArgs {
             email: email.to_string(),
             session_key: identity.public_key().unwrap(),
-            expiration: result.expiration,
+            expiration: generate_magic_link_success.expiration,
         },
     );
 
@@ -80,86 +90,6 @@ fn end_to_end(correct_code: bool) {
         get_delegation_response,
         GetDelegationResponse::Success(_)
     ));
-}
-
-#[test]
-fn incorrect_code_increases_blocked_duration() {
-    let TestEnv {
-        mut env,
-        canister_id,
-        ..
-    } = client::install_canister();
-
-    let sender = random_principal();
-    let email = "blah@blah.com";
-    let identity = create_session_identity();
-    let mut previous_blocked_duration = 0;
-
-    for _ in 0..5 {
-        let generate_magic_link_response = client::generate_magic_link(
-            &mut env,
-            sender,
-            canister_id,
-            &GenerateMagicLinkArgs {
-                email: email.to_string(),
-                session_key: identity.public_key().unwrap(),
-                max_time_to_live: None,
-            },
-        );
-
-        assert!(matches!(
-            generate_magic_link_response,
-            GenerateMagicLinkResponse::Success
-        ));
-
-        for attempt in 1..=3 {
-            let submit_verification_code_response = client::submit_verification_code(
-                &mut env,
-                sender,
-                canister_id,
-                &SubmitVerificationCodeArgs {
-                    email: email.to_string(),
-                    code: INCORRECT_CODE.to_string(),
-                },
-            );
-
-            let SubmitVerificationCodeResponse::IncorrectCode(ic) =
-                submit_verification_code_response
-            else {
-                panic!()
-            };
-
-            assert_eq!(ic.attempts_remaining, 3 - attempt);
-
-            if attempt == 3 {
-                let blocked_duration = ic.blocked_duration.expect("Blocked until not set");
-                assert!(blocked_duration > previous_blocked_duration);
-                previous_blocked_duration = blocked_duration;
-            } else {
-                assert!(ic.blocked_duration.is_none());
-            }
-        }
-
-        env.advance_time(Duration::from_millis(previous_blocked_duration - 1));
-
-        let generate_magic_link_response = client::generate_magic_link(
-            &mut env,
-            sender,
-            canister_id,
-            &GenerateMagicLinkArgs {
-                email: email.to_string(),
-                session_key: identity.public_key().unwrap(),
-                max_time_to_live: None,
-            },
-        );
-
-        assert!(matches!(
-            generate_magic_link_response,
-            GenerateMagicLinkResponse::Blocked(duration) if duration == 1
-        ));
-
-        env.advance_time(Duration::from_millis(1));
-    }
 }
 
 #[test]

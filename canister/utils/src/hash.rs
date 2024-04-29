@@ -2,9 +2,9 @@
 
 //! Provides helper functions to calculate the representation independent hash
 //! of structured data.
-use crate::Hash;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use sign_in_with_email_canister::Hash;
 use std::collections::HashMap;
 use std::convert::AsRef;
 

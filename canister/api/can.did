@@ -17,7 +17,12 @@ type GenerateMagicLinkResponse = variant {
   Blocked : nat64;
   EmailInvalid;
   FailedToSendEmail : text;
-  Success;
+  Success : GenerateMagicLinkSuccess;
+};
+type GenerateMagicLinkSuccess = record {
+  created : nat64;
+  user_key : blob;
+  expiration : nat64;
 };
 type GetDelegationArgs = record {
   session_key : blob;
@@ -25,33 +30,29 @@ type GetDelegationArgs = record {
   expiration : nat64;
 };
 type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
-type IncorrectCode = record {
-  blocked_duration : opt nat64;
-  attempts_remaining : nat32;
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : blob;
+  headers : vec record { text; text };
 };
-type InitArgs = record { test_mode : bool };
+type HttpResponse = record {
+  body : blob;
+  headers : vec record { text; text };
+  upgrade : opt bool;
+  status_code : nat16;
+};
+type InitArgs = record { salt : opt blob; email_sender_public_key_pem : text };
 type InitOrUpgradeArgs = variant { Upgrade : UpgradeArgs; Init : InitArgs };
 type SignedDelegation = record { signature : blob; delegation : Delegation };
-type SubmitVerificationCodeArgs = record { code : text; email : text };
-type SubmitVerificationCodeResponse = variant {
-  NotFound;
-  Success : SubmitVerificationCodeSuccess;
-  IncorrectCode : IncorrectCode;
-};
-type SubmitVerificationCodeSuccess = record {
-  user_key : blob;
-  expiration : nat64;
-};
 type UpgradeArgs = record {
+  email_sender_public_key_pem : opt text;
   email_sender_config : opt EncryptedEmailSenderConfig;
 };
 service : (InitOrUpgradeArgs) -> {
-  generate_magic_link : (GenerateMagicLinkArgs) -> (
-      GenerateMagicLinkResponse,
-    );
+  generate_magic_link : (GenerateMagicLinkArgs) -> (GenerateMagicLinkResponse);
   get_delegation : (GetDelegationArgs) -> (GetDelegationResponse) query;
+  http_request : (HttpRequest) -> (HttpResponse) query;
+  http_request_update : (HttpRequest) -> (HttpResponse);
   rsa_public_key : () -> (opt text) query;
-  submit_verification_code : (SubmitVerificationCodeArgs) -> (
-      SubmitVerificationCodeResponse,
-    );
 }

@@ -1,13 +1,16 @@
 use crate::rng::random_principal;
+use crate::rsa::generate_rsa_private_key_from_seed;
 use crate::setup::setup_new_env;
-use crate::{canister_wasm, TestEnv, TEST_SALT};
+use crate::{canister_wasm, TestEnv, EMAIL_SENDER_RSA_SEED, TEST_SALT};
 use candid::{CandidType, Principal};
+use ic_http_certification::{HttpRequest, HttpResponse};
 use pocket_ic::{PocketIc, UserError, WasmResult};
+use rsa::pkcs1::LineEnding;
+use rsa::pkcs8::EncodePublicKey;
 use serde::de::DeserializeOwned;
 use sign_in_with_email_canister::{
     GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
-    InitArgs, InitOrUpgradeArgs, SubmitVerificationCodeArgs, SubmitVerificationCodeResponse,
-    UpgradeArgs,
+    InitArgs, InitOrUpgradeArgs, UpgradeArgs,
 };
 
 pub fn generate_magic_link(
@@ -19,13 +22,22 @@ pub fn generate_magic_link(
     execute_update(env, sender, canister_id, "generate_magic_link", args)
 }
 
-pub fn submit_verification_code(
+pub fn http_request(
+    env: &PocketIc,
+    sender: Principal,
+    canister_id: Principal,
+    args: &HttpRequest,
+) -> HttpResponse {
+    execute_query(env, sender, canister_id, "http_request", args)
+}
+
+pub fn http_request_update(
     env: &mut PocketIc,
     sender: Principal,
     canister_id: Principal,
-    args: &SubmitVerificationCodeArgs,
-) -> SubmitVerificationCodeResponse {
-    execute_update(env, sender, canister_id, "submit_verification_code", args)
+    args: &HttpRequest,
+) -> HttpResponse {
+    execute_update(env, sender, canister_id, "http_request_update", args)
 }
 
 pub fn get_delegation(
@@ -41,7 +53,11 @@ pub fn install_canister() -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let args = InitOrUpgradeArgs::Init(InitArgs {
+    let init_args = InitOrUpgradeArgs::Init(InitArgs {
+        email_sender_public_key_pem: generate_rsa_private_key_from_seed(EMAIL_SENDER_RSA_SEED)
+            .to_public_key()
+            .to_public_key_pem(LineEnding::LF)
+            .unwrap(),
         salt: Some(TEST_SALT),
     });
 
@@ -50,7 +66,7 @@ pub fn install_canister() -> TestEnv {
     env.install_canister(
         canister_id,
         wasm,
-        candid::encode_one(args).unwrap(),
+        candid::encode_one(init_args).unwrap(),
         Some(controller),
     );
     env.tick();

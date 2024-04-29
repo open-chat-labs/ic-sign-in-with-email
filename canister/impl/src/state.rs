@@ -1,35 +1,31 @@
 use crate::email_sender::EmailSenderConfig;
-use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
 use crate::model::email_stats::EmailStatsMap;
 use crate::model::salt::Salt;
-use crate::model::validated_email::ValidatedEmail;
-use crate::{
-    env, Hash, DEFAULT_SESSION_EXPIRATION_PERIOD, MAX_SESSION_EXPIRATION_PERIOD,
-    NANOS_PER_MILLISECOND,
-};
+use crate::{env, Hash};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
 use magic_links::{MagicLink, SignedMagicLink};
-use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GetDelegationResponse, Nanoseconds, SignedDelegation,
-    SubmitVerificationCodeSuccess, TimestampMillis,
+    Delegation, GetDelegationResponse, SignedDelegation, TimestampMillis,
+};
+use sign_in_with_email_canister_utils::{
+    calculate_seed, delegation_signature_msg_hash, ValidatedEmail,
 };
 use std::cell::RefCell;
-use std::collections::HashMap;
 
 thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct State {
     #[serde(skip)]
     signature_map: SignatureMap,
     email_sender_config: Option<EmailSenderConfig>,
+    email_sender_rsa_public_key: RsaPublicKey,
     #[serde(default)]
     email_stats: EmailStatsMap,
     rsa_private_key: Option<RsaPrivateKey>,
@@ -63,10 +59,15 @@ pub fn take() -> State {
 }
 
 impl State {
-    pub fn new(test_mode: bool) -> State {
+    pub fn new(email_sender_public_key: RsaPublicKey, test_mode: bool) -> State {
         State {
+            signature_map: SignatureMap::default(),
+            email_sender_config: None,
+            email_sender_rsa_public_key: email_sender_public_key,
+            email_stats: EmailStatsMap::default(),
+            rsa_private_key: None,
+            salt: Salt::default(),
             test_mode,
-            ..Default::default()
         }
     }
 
@@ -102,57 +103,22 @@ impl State {
         self.test_mode
     }
 
-    pub fn generate_magic_link(
-        &self,
-        email: ValidatedEmail,
-        session_key: Vec<u8>,
-        max_time_to_live: Option<Nanoseconds>,
-        now: TimestampMillis,
-    ) -> MagicLink {
-        let seed = self.calculate_seed(&email);
-
-        let delta = Nanoseconds::min(
-            max_time_to_live.unwrap_or(DEFAULT_SESSION_EXPIRATION_PERIOD),
-            MAX_SESSION_EXPIRATION_PERIOD,
-        );
-
-        let now_nanos = now * NANOS_PER_MILLISECOND;
-        let expiration = now_nanos.saturating_add(delta);
-        let delegation = Delegation {
-            pubkey: session_key,
-            expiration,
-        };
-
-        MagicLink::new(seed, delegation, now)
-    }
-
     pub fn unwrap_magic_link(
         &self,
         signed_magic_link: SignedMagicLink,
     ) -> Result<MagicLink, String> {
-        let email_sender_rsa_public_key_pem = self
-            .email_sender_config
-            .as_ref()
-            .map(|c| c.rsa_public_key_pem())
-            .unwrap();
-
-        let email_sender_public_key =
-            RsaPublicKey::from_pkcs1_pem(email_sender_rsa_public_key_pem).unwrap();
-
-        if !signed_magic_link.verify(email_sender_public_key) {
-            return Err("Invalid signature".to_string());
-        }
-
         let private_key = self.rsa_private_key.clone().unwrap();
-        signed_magic_link
-            .link()
-            .decrypt(private_key)
-            .map_err(|_| "Decryption failed".to_string())
+
+        signed_magic_link.unwrap(self.email_sender_rsa_public_key.clone(), private_key)
     }
 
     pub fn process_magic_link(&mut self, magic_link: MagicLink, now: TimestampMillis) -> bool {
-        if magic_link.expired(now) {
-            self.prepare_delegation(magic_link.seed(), magic_link.delegation().clone());
+        if !magic_link.expired(now) {
+            let msg_hash = delegation_signature_msg_hash(&magic_link.delegation());
+
+            self.signature_map
+                .add_signature(&magic_link.seed(), msg_hash);
+            self.update_root_hash();
             true
         } else {
             false
@@ -164,7 +130,7 @@ impl State {
         email: ValidatedEmail,
         delegation: Delegation,
     ) -> GetDelegationResponse {
-        let seed = self.calculate_seed(&email);
+        let seed = calculate_seed(self.salt.get(), &email);
         let message_hash = delegation_signature_msg_hash(&delegation);
 
         if let Ok(signature) = self
@@ -184,20 +150,9 @@ impl State {
         self.email_stats.record_email_sent(seed, now)
     }
 
-    fn prepare_delegation(
-        &mut self,
-        seed: Hash,
-        delegation: Delegation,
-    ) -> SubmitVerificationCodeSuccess {
-        let msg_hash = delegation_signature_msg_hash(&delegation);
-
-        self.signature_map.add_signature(&seed, msg_hash);
-        self.update_root_hash();
-
-        SubmitVerificationCodeSuccess {
-            user_key: self.der_encode_canister_sig_key(seed),
-            expiration: delegation.expiration,
-        }
+    pub fn der_encode_canister_sig_key(&self, seed: [u8; 32]) -> Vec<u8> {
+        let canister_id = env::canister_id();
+        CanisterSigPublicKey::new(canister_id, seed.to_vec()).to_der()
     }
 
     fn update_root_hash(&mut self) {
@@ -205,32 +160,4 @@ impl State {
             ic_certification::labeled_hash(LABEL_SIG, &self.signature_map.root_hash());
         set_certified_data(&prefixed_root_hash[..]);
     }
-
-    fn der_encode_canister_sig_key(&self, seed: [u8; 32]) -> Vec<u8> {
-        let canister_id = env::canister_id();
-        CanisterSigPublicKey::new(canister_id, seed.to_vec()).to_der()
-    }
-
-    fn calculate_seed(&self, email: &ValidatedEmail) -> [u8; 32] {
-        let salt = self.salt.get();
-
-        let mut bytes: Vec<u8> = vec![];
-        bytes.push(salt.len() as u8);
-        bytes.extend_from_slice(&salt);
-
-        let email_bytes = email.as_str().bytes();
-        bytes.push(email_bytes.len() as u8);
-        bytes.extend(email_bytes);
-
-        hash_bytes(&bytes)
-    }
-}
-
-fn delegation_signature_msg_hash(d: &Delegation) -> Hash {
-    use crate::hash::Value;
-    let mut m = HashMap::new();
-    m.insert("pubkey", Value::Bytes(d.pubkey.as_slice()));
-    m.insert("expiration", Value::U64(d.expiration));
-    let map_hash = hash_of_map(m);
-    hash_with_domain(b"ic-request-auth-delegation", &map_hash)
 }

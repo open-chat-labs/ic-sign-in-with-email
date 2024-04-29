@@ -1,7 +1,7 @@
-use crate::model::validated_email::ValidatedEmail;
 use crate::state;
 use ic_cdk::query;
 use sign_in_with_email_canister::{Delegation, GetDelegationArgs, GetDelegationResponse};
+use sign_in_with_email_canister_utils::ValidatedEmail;
 
 #[query]
 fn get_delegation(args: GetDelegationArgs) -> GetDelegationResponse {

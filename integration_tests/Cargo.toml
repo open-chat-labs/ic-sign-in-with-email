@@ -8,9 +8,13 @@ edition = "2021"
 [dev-dependencies]
 candid.workspace = true
 ic-agent.workspace = true
+ic-http-certification.workspace = true
+magic_links.path = "../libraries/magic_links"
 pocket-ic.workspace = true
 rand.workspace = true
 ring.workspace = true
+rsa.workspace = true
 serde.workspace = true
 sign_in_with_email_canister.path = "../canister/api"
+sign_in_with_email_canister_utils.path = "../canister/utils"
 test-case.workspace = true

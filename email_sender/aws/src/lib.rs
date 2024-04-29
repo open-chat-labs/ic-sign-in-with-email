@@ -61,11 +61,7 @@ impl AwsEmailSender {
         );
 
         let message_deduplication_id = idempotency_id.to_string();
-        let message = serde_json::to_string(&EmailAndMagicLink {
-            email,
-            magic_link: magic_link.to_string(),
-        })
-        .unwrap();
+        let message = serde_json::to_string(&EmailAndMagicLink { email, magic_link }).unwrap();
 
         let body = [
             ("Action", "Publish"),
@@ -113,7 +109,7 @@ impl AwsEmailSender {
 #[derive(Serialize)]
 struct EmailAndMagicLink {
     email: String,
-    magic_link: String,
+    magic_link: EncryptedMagicLink,
 }
 
 #[async_trait]
