@@ -18,8 +18,9 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     let mut deserializer = rmp_serde::Deserializer::new(reader);
 
     let mut state = State::deserialize(&mut deserializer).unwrap();
+    let entropy = if state.test_mode() { 0 } else { env::now() };
 
-    rng::set_seed(state.salt(), env::now());
+    rng::set_seed(state.salt(), entropy);
 
     if let Some(config) = upgrade_args.email_sender_config {
         let rsa_private_key = state

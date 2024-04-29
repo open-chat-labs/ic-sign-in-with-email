@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Changed
+
+- Start collecting basic stats per account ([#10](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/10))
+- Pass up session key when generating verification code ([#12](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/12))
+- Allow specifying the RNG salt for tests ([#14](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/14))
+
 ## [[0.4.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.4.0)] - 2024-04-19
 
 ### Changed

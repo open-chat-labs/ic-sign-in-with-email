@@ -13,6 +13,7 @@ mod tests;
 
 const CORRECT_CODE: &str = "123456";
 const INCORRECT_CODE: &str = "123457";
+const TEST_SALT: [u8; 32] = [1; 32];
 
 pub struct TestEnv {
     pub env: PocketIc,
