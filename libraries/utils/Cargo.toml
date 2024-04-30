@@ -1,5 +1,5 @@
 [package]
-name = "sign_in_with_email_canister_utils"
+name = "utils"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies]
 email_address.workspace = true
-magic_links.path = "../../libraries/magic_links"
+magic_links.path = "../magic_links"
 rsa.workspace = true
 serde.workspace = true
 serde_bytes.workspace = true
 sha2.workspace = true
-sign_in_with_email_canister.path = "../api"
+sign_in_with_email_canister.path = "../../canister/api"

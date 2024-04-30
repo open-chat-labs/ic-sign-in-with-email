@@ -16,5 +16,5 @@ ring.workspace = true
 rsa.workspace = true
 serde.workspace = true
 sign_in_with_email_canister.path = "../canister/api"
-sign_in_with_email_canister_utils.path = "../canister/utils"
 test-case.workspace = true
+utils.path = "../libraries/utils"

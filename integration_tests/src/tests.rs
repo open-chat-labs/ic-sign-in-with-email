@@ -10,7 +10,7 @@ use sign_in_with_email_canister::{
     Delegation, GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs,
     GetDelegationResponse,
 };
-use sign_in_with_email_canister_utils::ValidatedEmail;
+use utils::ValidatedEmail;
 
 #[test]
 fn end_to_end() {
@@ -42,7 +42,7 @@ fn end_to_end() {
         panic!();
     };
 
-    let seed = sign_in_with_email_canister_utils::calculate_seed(
+    let seed = utils::calculate_seed(
         TEST_SALT,
         &ValidatedEmail::try_from(email.to_string()).unwrap(),
     );

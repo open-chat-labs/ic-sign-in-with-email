@@ -2,11 +2,11 @@
 members = [
     "canister/api",
     "canister/impl",
-    "canister/utils",
     "email_sender/aws",
     "email_sender/core",
     "integration_tests",
     "libraries/magic_links",
+    "libraries/utils",
 ]
 resolver = "2"
 

@@ -11,10 +11,8 @@ use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
     Delegation, GetDelegationResponse, SignedDelegation, TimestampMillis,
 };
-use sign_in_with_email_canister_utils::{
-    calculate_seed, delegation_signature_msg_hash, ValidatedEmail,
-};
 use std::cell::RefCell;
+use utils::{calculate_seed, delegation_signature_msg_hash, ValidatedEmail};
 
 thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();

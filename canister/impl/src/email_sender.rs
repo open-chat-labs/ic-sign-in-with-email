@@ -7,8 +7,8 @@ use magic_links::EncryptedMagicLink;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 use serde::Serialize;
 use sign_in_with_email_canister::{EncryptedAwsEmailSenderConfig, EncryptedEmailSenderConfig};
-use sign_in_with_email_canister_utils::ValidatedEmail;
 use std::sync::OnceLock;
+use utils::ValidatedEmail;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
 

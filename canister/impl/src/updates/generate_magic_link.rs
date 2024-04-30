@@ -4,7 +4,7 @@ use sign_in_with_email_canister::{
     GenerateMagicLinkArgs, GenerateMagicLinkResponse, GenerateMagicLinkResponse::*,
     GenerateMagicLinkSuccess,
 };
-use sign_in_with_email_canister_utils::ValidatedEmail;
+use utils::ValidatedEmail;
 
 #[update]
 async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkResponse {
@@ -16,7 +16,7 @@ async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkRe
 
     let (magic_link, encrypted_magic_link) = state::read(|s| {
         let salt = s.salt();
-        let magic_link = sign_in_with_email_canister_utils::generate_magic_link(
+        let magic_link = utils::generate_magic_link(
             email.clone(),
             args.session_key,
             args.max_time_to_live,

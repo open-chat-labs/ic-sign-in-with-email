@@ -30,7 +30,7 @@ rmp-serde.workspace = true
 rsa = { workspace = true, features = ["serde"] }
 serde.workspace = true
 sign_in_with_email_canister.path = "../api"
-sign_in_with_email_canister_utils.path = "../utils"
+utils.path = "../../libraries/utils"
 
 [features]
 default = ["aws"]
