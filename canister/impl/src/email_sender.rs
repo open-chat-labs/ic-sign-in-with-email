@@ -1,13 +1,14 @@
-use crate::model::validated_email::ValidatedEmail;
 use crate::{env, rng};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use candid::{CandidType, Deserialize};
 use email_sender_core::EmailSender;
+use magic_links::EncryptedMagicLink;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 use serde::Serialize;
 use sign_in_with_email_canister::{EncryptedAwsEmailSenderConfig, EncryptedEmailSenderConfig};
 use std::sync::OnceLock;
+use utils::ValidatedEmail;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
 
@@ -37,15 +38,15 @@ pub fn init(email_sender: impl EmailSender + 'static) {
         .unwrap_or_else(|_| panic!("Email sender already set"));
 }
 
-pub async fn send_verification_code_email(
+pub async fn send_magic_link(
     email: ValidatedEmail,
-    code: String,
+    magic_link: EncryptedMagicLink,
 ) -> Result<(), String> {
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
     let idempotency_id = rng::gen();
 
     sender
-        .send(email.into(), code, idempotency_id, env::now())
+        .send(email.into(), magic_link, idempotency_id, env::now())
         .await
 }
 

@@ -17,18 +17,17 @@ pub fn set_seed(salt: [u8; 32], entropy: u64) {
     RNG.set(Some(StdRng::from_seed(seed)));
 }
 
-pub fn generate_verification_code() -> String {
-    let random = gen::<u128>().to_string();
-    random.chars().rev().take(6).collect()
-}
-
 pub fn generate_rsa_private_key() -> RsaPrivateKey {
-    RNG.with_borrow_mut(|rng| RsaPrivateKey::new(rng.as_mut().unwrap(), 2048).unwrap())
+    with_rng(|rng| RsaPrivateKey::new(rng, 2048).unwrap())
 }
 
 pub fn gen<T>() -> T
 where
     Standard: Distribution<T>,
 {
-    RNG.with_borrow_mut(|rng| rng.as_mut().unwrap().gen())
+    with_rng(|rng| rng.gen())
+}
+
+pub fn with_rng<F: FnOnce(&mut StdRng) -> T, T>(f: F) -> T {
+    RNG.with_borrow_mut(|rng| f(rng.as_mut().unwrap()))
 }

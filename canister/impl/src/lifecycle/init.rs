@@ -2,15 +2,19 @@ use crate::state::State;
 use crate::{email_sender, env, rng, state};
 use email_sender_core::NullEmailSender;
 use ic_cdk::init;
+use rsa::pkcs8::DecodePublicKey;
+use rsa::RsaPublicKey;
 use sign_in_with_email_canister::InitOrUpgradeArgs;
 use std::time::Duration;
 
 #[init]
 fn init(args: InitOrUpgradeArgs) {
     let init_args = args.to_init_args();
+    let email_sender_public_key =
+        RsaPublicKey::from_public_key_pem(&init_args.email_sender_public_key_pem).unwrap();
     let test_mode = init_args.salt.is_some();
 
-    state::init(State::new(test_mode));
+    state::init(State::new(email_sender_public_key, test_mode));
 
     if let Some(salt) = init_args.salt {
         email_sender::init(NullEmailSender::default());

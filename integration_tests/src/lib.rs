@@ -8,12 +8,12 @@ use std::path::PathBuf;
 mod client;
 mod identity;
 mod rng;
+mod rsa;
 mod setup;
 mod tests;
 
-const CORRECT_CODE: &str = "123456";
-const INCORRECT_CODE: &str = "123457";
 const TEST_SALT: [u8; 32] = [1; 32];
+const EMAIL_SENDER_RSA_SEED: [u8; 32] = [2; 32];
 
 pub struct TestEnv {
     pub env: PocketIc,

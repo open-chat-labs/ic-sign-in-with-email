@@ -9,6 +9,7 @@ pub use lifecycle::*;
 pub use queries::*;
 pub use updates::*;
 
+pub type Hash = [u8; 32];
 pub type Milliseconds = u64;
 pub type Nanoseconds = u64;
 pub type TimestampMillis = u64;

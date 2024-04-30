@@ -26,11 +26,13 @@ impl InitOrUpgradeArgs {
 
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub struct InitArgs {
+    pub email_sender_public_key_pem: String,
     // Only use this for testing
     pub salt: Option<[u8; 32]>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Default)]
 pub struct UpgradeArgs {
+    pub email_sender_public_key_pem: Option<String>,
     pub email_sender_config: Option<EncryptedEmailSenderConfig>,
 }
