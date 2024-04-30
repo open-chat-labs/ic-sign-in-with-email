@@ -23,6 +23,7 @@ fn end_to_end() {
     let sender = random_principal();
     let email = "blah@blah.com";
     let identity = create_session_identity();
+    let session_key = identity.public_key().unwrap();
 
     let generate_magic_link_response = client::generate_magic_link(
         &mut env,
@@ -30,7 +31,7 @@ fn end_to_end() {
         canister_id,
         &GenerateMagicLinkArgs {
             email: email.to_string(),
-            session_key: identity.public_key().unwrap(),
+            session_key: session_key.clone(),
             max_time_to_live: None,
         },
     );
@@ -46,7 +47,7 @@ fn end_to_end() {
         &ValidatedEmail::try_from(email.to_string()).unwrap(),
     );
     let delegation = Delegation {
-        pubkey: generate_magic_link_success.user_key,
+        pubkey: session_key.clone(),
         expiration: generate_magic_link_success.expiration,
     };
     let magic_link = MagicLink::new(seed, delegation, generate_magic_link_success.created);
@@ -69,6 +70,7 @@ fn end_to_end() {
 
     let http_response = client::http_request(&env, sender, canister_id, &http_request);
 
+    assert_eq!(http_response.status_code, 200);
     assert!(http_response.upgrade.unwrap());
 
     let http_response = client::http_request_update(&mut env, sender, canister_id, &http_request);
@@ -81,7 +83,7 @@ fn end_to_end() {
         canister_id,
         &GetDelegationArgs {
             email: email.to_string(),
-            session_key: identity.public_key().unwrap(),
+            session_key,
             expiration: generate_magic_link_success.expiration,
         },
     );

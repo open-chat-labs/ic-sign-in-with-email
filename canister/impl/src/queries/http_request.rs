@@ -31,37 +31,43 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
             let signed_magic_link =
                 SignedMagicLink::from_hex_strings(&ciphertext, &encrypted_key, &nonce, &signature);
 
-            if let Ok(magic_link) = state::read(|s| s.unwrap_magic_link(signed_magic_link)) {
-                if update {
-                    let success = state::mutate(|s| s.process_magic_link(magic_link, env::now()));
-                    if success {
-                        return HttpResponse {
-                            status_code: 200,
-                            headers: Vec::new(),
-                            body: Vec::new(),
-                            upgrade: Some(true),
-                        };
+            let result = match state::read(|s| s.unwrap_magic_link(signed_magic_link)) {
+                Ok(magic_link) => {
+                    if !magic_link.expired(env::now()) {
+                        if update {
+                            let success =
+                                state::mutate(|s| s.process_magic_link(magic_link, env::now()));
+                            if success {
+                                Ok(())
+                            } else {
+                                Err("Invalid link".to_string())
+                            }
+                        } else {
+                            Ok(())
+                        }
+                    } else {
+                        Err("Link expired".to_string())
                     }
-                } else if !magic_link.expired(env::now()) {
-                    return HttpResponse {
-                        status_code: 200,
-                        headers: Vec::new(),
-                        body: Vec::new(),
-                        upgrade: None,
-                    };
                 }
-            }
+                Err(error) => Err(error),
+            };
 
-            let text = b"Magic link expired".to_vec();
-
-            HttpResponse {
-                status_code: 200,
-                headers: vec![
-                    ("content-type".to_string(), "application/text".to_string()),
-                    ("content-length".to_string(), text.len().to_string()),
-                ],
-                body: text,
-                upgrade: None,
+            match result {
+                Ok(_) => HttpResponse {
+                    status_code: 200,
+                    headers: vec![],
+                    body: Vec::new(),
+                    upgrade: if update { None } else { Some(true) },
+                },
+                Err(error) => HttpResponse {
+                    status_code: 400,
+                    headers: vec![
+                        ("content-type".to_string(), "application/text".to_string()),
+                        ("content-length".to_string(), error.len().to_string()),
+                    ],
+                    body: error.into_bytes(),
+                    upgrade: None,
+                },
             }
         }
         _ => not_found(),
