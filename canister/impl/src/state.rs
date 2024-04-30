@@ -1,5 +1,4 @@
 use crate::email_sender::EmailSenderConfig;
-use crate::model::email_stats::EmailStatsMap;
 use crate::model::magic_links::MagicLinks;
 use crate::model::salt::Salt;
 use crate::{env, Hash};
@@ -25,8 +24,6 @@ pub struct State {
     signature_map: SignatureMap,
     email_sender_config: Option<EmailSenderConfig>,
     email_sender_rsa_public_key: RsaPublicKey,
-    #[serde(default)]
-    email_stats: EmailStatsMap,
     #[serde(default)]
     magic_links: MagicLinks,
     rsa_private_key: Option<RsaPrivateKey>,
@@ -65,7 +62,6 @@ impl State {
             signature_map: SignatureMap::default(),
             email_sender_config: None,
             email_sender_rsa_public_key: email_sender_public_key,
-            email_stats: EmailStatsMap::default(),
             magic_links: MagicLinks::default(),
             rsa_private_key: None,
             salt: Salt::default(),
@@ -121,6 +117,8 @@ impl State {
             self.signature_map
                 .add_signature(&magic_link.seed(), msg_hash);
             self.update_root_hash();
+            self.magic_links
+                .mark_success(magic_link.seed(), msg_hash, now);
             true
         } else {
             false
@@ -155,13 +153,12 @@ impl State {
         now: TimestampMillis,
     ) {
         let msg_hash = delegation_signature_msg_hash(delegation);
-        self.magic_links.push(
+        self.magic_links.mark_magic_link_sent(
             seed,
             msg_hash,
             delegation.expiration / NANOS_PER_MILLISECOND,
             now,
         );
-        self.email_stats.record_email_sent(seed, now);
     }
 
     pub fn der_encode_canister_sig_key(&self, seed: [u8; 32]) -> Vec<u8> {
