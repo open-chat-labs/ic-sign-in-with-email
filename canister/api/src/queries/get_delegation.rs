@@ -1,4 +1,4 @@
-use crate::{SignedDelegation, TimestampNanos};
+use crate::{SignedDelegation, TimestampMillis, TimestampNanos};
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
@@ -13,5 +13,6 @@ pub struct GetDelegationArgs {
 #[derive(CandidType, Serialize, Deserialize, Debug)]
 pub enum GetDelegationResponse {
     Success(SignedDelegation),
+    Active(TimestampMillis),
     NotFound,
 }

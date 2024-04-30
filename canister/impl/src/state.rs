@@ -1,5 +1,6 @@
 use crate::email_sender::EmailSenderConfig;
 use crate::model::email_stats::EmailStatsMap;
+use crate::model::magic_links::MagicLinks;
 use crate::model::salt::Salt;
 use crate::{env, Hash};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
@@ -9,7 +10,7 @@ use magic_links::{MagicLink, SignedMagicLink};
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GetDelegationResponse, SignedDelegation, TimestampMillis,
+    Delegation, GetDelegationResponse, SignedDelegation, TimestampMillis, NANOS_PER_MILLISECOND,
 };
 use std::cell::RefCell;
 use utils::{calculate_seed, delegation_signature_msg_hash, ValidatedEmail};
@@ -26,6 +27,8 @@ pub struct State {
     email_sender_rsa_public_key: RsaPublicKey,
     #[serde(default)]
     email_stats: EmailStatsMap,
+    #[serde(default)]
+    magic_links: MagicLinks,
     rsa_private_key: Option<RsaPrivateKey>,
     salt: Salt,
     test_mode: bool,
@@ -63,6 +66,7 @@ impl State {
             email_sender_config: None,
             email_sender_rsa_public_key: email_sender_public_key,
             email_stats: EmailStatsMap::default(),
+            magic_links: MagicLinks::default(),
             rsa_private_key: None,
             salt: Salt::default(),
             test_mode,
@@ -127,25 +131,40 @@ impl State {
         &self,
         email: ValidatedEmail,
         delegation: Delegation,
+        now: TimestampMillis,
     ) -> GetDelegationResponse {
         let seed = calculate_seed(self.salt.get(), &email);
-        let message_hash = delegation_signature_msg_hash(&delegation);
+        let msg_hash = delegation_signature_msg_hash(&delegation);
 
         if let Ok(signature) = self
             .signature_map
-            .get_signature_as_cbor(&seed, message_hash, None)
+            .get_signature_as_cbor(&seed, msg_hash, None)
         {
             GetDelegationResponse::Success(SignedDelegation {
                 delegation,
                 signature,
             })
+        } else if let Some(expiration) = self.magic_links.get(seed, msg_hash, now) {
+            GetDelegationResponse::Active(expiration)
         } else {
             GetDelegationResponse::NotFound
         }
     }
 
-    pub fn record_email_sent(&mut self, seed: Hash, now: TimestampMillis) {
-        self.email_stats.record_email_sent(seed, now)
+    pub fn record_magic_link_sent(
+        &mut self,
+        seed: Hash,
+        delegation: &Delegation,
+        now: TimestampMillis,
+    ) {
+        let msg_hash = delegation_signature_msg_hash(delegation);
+        self.magic_links.push(
+            seed,
+            msg_hash,
+            delegation.expiration / NANOS_PER_MILLISECOND,
+            now,
+        );
+        self.email_stats.record_email_sent(seed, now);
     }
 
     pub fn der_encode_canister_sig_key(&self, seed: [u8; 32]) -> Vec<u8> {

@@ -36,7 +36,7 @@ async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkRe
         let delegation = magic_link.delegation();
 
         state::mutate(|s| {
-            s.record_email_sent(seed, env::now());
+            s.record_magic_link_sent(seed, &delegation, env::now());
 
             Success(GenerateMagicLinkSuccess {
                 created: start,
