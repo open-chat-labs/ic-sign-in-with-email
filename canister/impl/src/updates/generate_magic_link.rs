@@ -16,7 +16,7 @@ async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkRe
 
     let (magic_link, encrypted_magic_link) = state::read(|s| {
         let salt = s.salt();
-        let magic_link = utils::generate_magic_link(
+        let magic_link = magic_links::generate(
             email.clone(),
             args.session_key,
             args.max_time_to_live,

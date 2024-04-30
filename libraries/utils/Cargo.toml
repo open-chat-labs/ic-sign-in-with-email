@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 email_address.workspace = true
-magic_links.path = "../magic_links"
 rsa.workspace = true
 serde.workspace = true
 serde_bytes.workspace = true
