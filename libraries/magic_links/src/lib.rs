@@ -100,7 +100,7 @@ impl EncryptedMagicLink {
 
         let cipher = Aes128Gcm::new_from_slice(&key).unwrap();
         let nonce = GenericArray::from_slice(self.nonce.as_slice());
-        let decrypted = cipher.decrypt(&nonce, self.ciphertext.as_slice()).unwrap();
+        let decrypted = cipher.decrypt(nonce, self.ciphertext.as_slice()).unwrap();
 
         serde_json::from_slice(&decrypted).map_err(|e| e.to_string())
     }

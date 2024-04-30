@@ -114,7 +114,7 @@ impl State {
 
     pub fn process_magic_link(&mut self, magic_link: MagicLink, now: TimestampMillis) -> bool {
         if !magic_link.expired(now) {
-            let msg_hash = delegation_signature_msg_hash(&magic_link.delegation());
+            let msg_hash = delegation_signature_msg_hash(magic_link.delegation());
 
             self.signature_map
                 .add_signature(&magic_link.seed(), msg_hash);
