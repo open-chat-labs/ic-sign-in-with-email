@@ -1392,6 +1392,7 @@ dependencies = [
  "serde",
  "sign_in_with_email_canister",
  "test-case",
+ "test_utils",
  "utils",
 ]
 
@@ -2495,6 +2496,15 @@ dependencies = [
  "quote",
  "syn 2.0.58",
  "test-case-core",
+]
+
+[[package]]
+name = "test_utils"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "rsa",
+ "sign_in_with_email_canister",
 ]
 
 [[package]]

@@ -1,0 +1,11 @@
+[package]
+name = "test_utils"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand.workspace = true
+rsa.workspace = true
+sign_in_with_email_canister.path = "../../canister/api"
