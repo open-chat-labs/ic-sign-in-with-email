@@ -131,7 +131,6 @@ impl State {
         &self,
         email: ValidatedEmail,
         delegation: Delegation,
-        now: TimestampMillis,
     ) -> GetDelegationResponse {
         let seed = calculate_seed(self.salt.get(), &email);
         let msg_hash = delegation_signature_msg_hash(&delegation);
@@ -144,8 +143,6 @@ impl State {
                 delegation,
                 signature,
             })
-        } else if let Some(expiration) = self.magic_links.get(seed, msg_hash, now) {
-            GetDelegationResponse::Active(expiration)
         } else {
             GetDelegationResponse::NotFound
         }

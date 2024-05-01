@@ -1,4 +1,4 @@
-use crate::{env, state};
+use crate::state;
 use ic_cdk::query;
 use sign_in_with_email_canister::{Delegation, GetDelegationArgs, GetDelegationResponse};
 use utils::ValidatedEmail;
@@ -16,7 +16,6 @@ fn get_delegation(args: GetDelegationArgs) -> GetDelegationResponse {
                 pubkey: args.session_key,
                 expiration: args.expiration,
             },
-            env::now(),
         )
     })
 }

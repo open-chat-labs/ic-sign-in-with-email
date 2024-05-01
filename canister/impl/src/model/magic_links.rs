@@ -20,13 +20,6 @@ impl MagicLinks {
         self.in_flight.insert((seed, msg_hash), expiration);
     }
 
-    pub fn get(&self, seed: Hash, msg_hash: Hash, now: TimestampMillis) -> Option<TimestampMillis> {
-        self.in_flight
-            .get(&(seed, msg_hash))
-            .filter(|&ts| *ts > now)
-            .copied()
-    }
-
     fn prune(&mut self, now: TimestampMillis) {
         self.in_flight.retain(|_, ts| *ts > now)
     }

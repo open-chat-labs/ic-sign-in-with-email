@@ -29,11 +29,7 @@ type GetDelegationArgs = record {
   email : text;
   expiration : nat64;
 };
-type GetDelegationResponse = variant {
-  Active : nat64;
-  NotFound;
-  Success : SignedDelegation;
-};
+type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
 type HttpRequest = record {
   url : text;
   method : text;
