@@ -9,6 +9,12 @@ pub use lifecycle::*;
 pub use queries::*;
 pub use updates::*;
 
+pub const ONE_MINUTE: Milliseconds = 60 * 1000;
+pub const ONE_DAY: Milliseconds = 24 * 60 * ONE_MINUTE;
+pub const NANOS_PER_MILLISECOND: u64 = 1_000_000;
+pub const DEFAULT_SESSION_EXPIRATION_PERIOD: Nanoseconds = 30 * ONE_DAY * NANOS_PER_MILLISECOND;
+pub const MAX_SESSION_EXPIRATION_PERIOD: Nanoseconds = 90 * ONE_DAY * NANOS_PER_MILLISECOND;
+
 pub type Hash = [u8; 32];
 pub type Milliseconds = u64;
 pub type Nanoseconds = u64;

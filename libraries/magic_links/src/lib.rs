@@ -10,9 +10,37 @@ use rsa::signature::{SignatureEncoding, Signer, Verifier};
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sign_in_with_email_canister::{Delegation, Milliseconds, TimestampMillis};
+use sign_in_with_email_canister::{
+    Delegation, Milliseconds, Nanoseconds, TimestampMillis, DEFAULT_SESSION_EXPIRATION_PERIOD,
+    MAX_SESSION_EXPIRATION_PERIOD, NANOS_PER_MILLISECOND,
+};
+use utils::{calculate_seed, ValidatedEmail};
 
 const MAGIC_LINK_EXPIRATION: Milliseconds = 10 * 60 * 1000; // 10 minutes
+
+pub fn generate(
+    email: ValidatedEmail,
+    session_key: Vec<u8>,
+    max_time_to_live: Option<Nanoseconds>,
+    salt: [u8; 32],
+    now: TimestampMillis,
+) -> MagicLink {
+    let seed = calculate_seed(salt, &email);
+
+    let delta = Nanoseconds::min(
+        max_time_to_live.unwrap_or(DEFAULT_SESSION_EXPIRATION_PERIOD),
+        MAX_SESSION_EXPIRATION_PERIOD,
+    );
+
+    let now_nanos = now * NANOS_PER_MILLISECOND;
+    let expiration = now_nanos.saturating_add(delta);
+    let delegation = Delegation {
+        pubkey: session_key,
+        expiration,
+    };
+
+    MagicLink::new(seed, delegation, now)
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct MagicLink {
@@ -153,20 +181,14 @@ impl SignedMagicLink {
             .map_err(|_| "Decryption failed".to_string())
     }
 
-    pub fn ciphertext_string(&self) -> String {
-        hex_to_string(&self.ciphertext)
-    }
-
-    pub fn encrypted_key_string(&self) -> String {
-        hex_to_string(&self.encrypted_key)
-    }
-
-    pub fn nonce_string(&self) -> String {
-        hex_to_string(&self.nonce)
-    }
-
-    pub fn signature_string(&self) -> String {
-        hex_to_string(&self.signature)
+    pub fn build_querystring(&self) -> String {
+        format!(
+            "?c={}&k={}&n={}&s={}",
+            hex_to_string(&self.ciphertext),
+            hex_to_string(&self.encrypted_key),
+            hex_to_string(&self.nonce),
+            hex_to_string(&self.signature)
+        )
     }
 
     fn verify(&self, public_key: RsaPublicKey) -> bool {

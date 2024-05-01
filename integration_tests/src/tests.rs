@@ -58,11 +58,8 @@ fn end_to_end() {
     let http_request = HttpRequest {
         method: "GET".to_string(),
         url: format!(
-            "https://canister_id.icp0.io/auth?c={}&k={}&n={}&s={}",
-            signed.ciphertext_string(),
-            signed.encrypted_key_string(),
-            signed.nonce_string(),
-            signed.signature_string()
+            "https://canister_id.icp0.io/auth{}",
+            signed.build_querystring()
         ),
         headers: Vec::new(),
         body: Vec::new(),
