@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, HashMap};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct MagicLinks {
-    in_flight: HashMap<(Hash, Hash), TimestampMillis>,
+    active: HashMap<(Hash, Hash), TimestampMillis>,
     stats: BTreeMap<Hash, EmailStats>,
 }
 
@@ -27,7 +27,7 @@ impl MagicLinks {
         now: TimestampMillis,
     ) {
         self.prune_expired(now);
-        self.in_flight.insert((seed, msg_hash), expiration);
+        self.active.insert((seed, msg_hash), expiration);
         self.stats
             .entry(seed)
             .and_modify(|s| {
@@ -45,7 +45,7 @@ impl MagicLinks {
 
     pub fn mark_success(&mut self, seed: Hash, msg_hash: Hash, now: TimestampMillis) {
         self.prune_expired(now);
-        self.in_flight.remove(&(seed, msg_hash));
+        self.active.remove(&(seed, msg_hash));
         if let Some(stats) = self.stats.get_mut(&seed) {
             stats.successful_links += 1;
             stats.latest_successful_link = Some(now);
@@ -53,6 +53,6 @@ impl MagicLinks {
     }
 
     fn prune_expired(&mut self, now: TimestampMillis) {
-        self.in_flight.retain(|_, ts| *ts > now)
+        self.active.retain(|_, ts| *ts > now)
     }
 }
