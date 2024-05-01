@@ -6,6 +6,7 @@ members = [
     "email_sender/core",
     "integration_tests",
     "libraries/magic_links",
+    "libraries/test_utils",
     "libraries/utils",
 ]
 resolver = "2"

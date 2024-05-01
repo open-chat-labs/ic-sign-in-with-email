@@ -17,4 +17,5 @@ rsa.workspace = true
 serde.workspace = true
 sign_in_with_email_canister.path = "../canister/api"
 test-case.workspace = true
+test_utils.path = "../libraries/test_utils"
 utils.path = "../libraries/utils"

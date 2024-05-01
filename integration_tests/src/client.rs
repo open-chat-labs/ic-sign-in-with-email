@@ -1,17 +1,15 @@
 use crate::rng::random_principal;
-use crate::rsa::generate_rsa_private_key_from_seed;
 use crate::setup::setup_new_env;
-use crate::{canister_wasm, TestEnv, EMAIL_SENDER_RSA_SEED, TEST_SALT};
+use crate::{canister_wasm, TestEnv};
 use candid::{CandidType, Principal};
 use ic_http_certification::{HttpRequest, HttpResponse};
 use pocket_ic::{PocketIc, UserError, WasmResult};
-use rsa::pkcs1::LineEnding;
-use rsa::pkcs8::EncodePublicKey;
 use serde::de::DeserializeOwned;
 use sign_in_with_email_canister::{
     GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
-    InitArgs, InitOrUpgradeArgs, UpgradeArgs,
+    InitOrUpgradeArgs, UpgradeArgs,
 };
+use test_utils::default_init_args;
 
 pub fn generate_magic_link(
     env: &mut PocketIc,
@@ -53,13 +51,7 @@ pub fn install_canister() -> TestEnv {
     let env = setup_new_env();
     let controller = random_principal();
     let wasm = canister_wasm();
-    let init_args = InitOrUpgradeArgs::Init(InitArgs {
-        email_sender_public_key_pem: generate_rsa_private_key_from_seed(EMAIL_SENDER_RSA_SEED)
-            .to_public_key()
-            .to_public_key_pem(LineEnding::LF)
-            .unwrap(),
-        salt: Some(TEST_SALT),
-    });
+    let init_args = default_init_args();
 
     let canister_id = env.create_canister_with_settings(Some(controller), None);
     env.add_cycles(canister_id, 1_000_000_000_000);
