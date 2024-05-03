@@ -23,12 +23,12 @@ echo "Building canister wasm"
 cargo build --target wasm32-unknown-unknown --release -p sign_in_with_email_canister_impl --locked
 gzip -fk target/wasm32-unknown-unknown/release/sign_in_with_email_canister_impl.wasm
 
-cd integration_tests
+cd rs/integration_tests
 echo "PocketIC download starting"
 curl -Ls https://github.com/dfinity/pocketic/releases/download/${POCKET_IC_SERVER_VERSION}/pocket-ic-x86_64-${PLATFORM}.gz -o pocket-ic.gz || exit 1
 gzip -df pocket-ic.gz
 chmod +x pocket-ic
 echo "PocketIC download completed"
-cd ..
+cd ../..
 
 cargo test --package integration_tests $TESTNAME -- --test-threads $TEST_THREADS

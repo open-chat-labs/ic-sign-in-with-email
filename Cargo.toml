@@ -1,13 +1,13 @@
 [workspace]
 members = [
-    "canister/api",
-    "canister/impl",
-    "email_sender/aws",
-    "email_sender/core",
-    "integration_tests",
-    "libraries/magic_links",
-    "libraries/test_utils",
-    "libraries/utils",
+    "rs/canister/api",
+    "rs/canister/impl",
+    "rs/email_sender/aws",
+    "rs/email_sender/core",
+    "rs/integration_tests",
+    "rs/libraries/magic_links",
+    "rs/libraries/test_utils",
+    "rs/libraries/utils",
 ]
 resolver = "2"
 
