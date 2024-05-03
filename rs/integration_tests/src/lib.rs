@@ -38,6 +38,8 @@ fn canister_wasm_path() -> PathBuf {
     )
     .parent()
     .unwrap()
+    .parent()
+    .unwrap()
     .join("target")
     .join("wasm32-unknown-unknown")
     .join("release")
