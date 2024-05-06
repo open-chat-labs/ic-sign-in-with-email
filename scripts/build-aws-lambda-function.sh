@@ -1,0 +1,1 @@
+cargo lambda build -p email_sender_aws_lambda --release --arm64 --output-format zip
