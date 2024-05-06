@@ -32,7 +32,7 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     }
 
     if let Some(config) = state.email_sender_config().cloned() {
-        email_sender::init_from_config(config);
+        email_sender::init_from_config(config, env::canister_id());
     } else if state.test_mode() {
         email_sender::init(NullEmailSender::default());
     }

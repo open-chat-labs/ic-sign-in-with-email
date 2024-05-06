@@ -9,6 +9,7 @@ edition = "2021"
 aes-gcm.workspace = true
 clap = { workspace = true, features = ["derive"] }
 hex.workspace = true
+ic_principal.workspace = true
 rand.workspace = true
 rsa = { workspace = true, features = ["sha2"] }
 serde.workspace = true

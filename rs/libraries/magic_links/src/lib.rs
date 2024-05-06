@@ -1,6 +1,7 @@
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::Aead;
 use aes_gcm::{AeadCore, Aes128Gcm, KeyInit};
+use ic_principal::Principal;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rsa::pkcs1v15::{Signature, SigningKey, VerifyingKey};
@@ -95,6 +96,13 @@ impl MagicLink {
     pub fn expired(&self, now: TimestampMillis) -> bool {
         self.created + MAGIC_LINK_EXPIRATION < now
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MagicLinkMessage {
+    pub email: String,
+    pub identity_canister_id: Principal,
+    pub magic_link: EncryptedMagicLink,
 }
 
 #[serde_as]
