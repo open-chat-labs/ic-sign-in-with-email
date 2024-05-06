@@ -1,4 +1,3 @@
-use crate::email_sender::EmailSenderConfig;
 use crate::lifecycle::READER_WRITER_BUFFER_SIZE;
 use crate::memory::get_upgrades_memory;
 use crate::state::State;
@@ -28,7 +27,7 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
             .cloned()
             .expect("RSA private key not set");
 
-        state.set_email_sender_config(EmailSenderConfig::from_encrypted(config, rsa_private_key));
+        state.set_email_sender_config(config.decrypt(&rsa_private_key));
     }
 
     if let Some(config) = state.email_sender_config().cloned() {
