@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow specifying the RNG salt for tests ([#14](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/14))
 - Use magic links rather than verification codes ([#13](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/13))
 - Keep track of active magic links ([#16](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/16))
+- Include `identity_canister_id` when pushing magic links ([#19](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/19))
 
 ## [[0.4.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.4.0)] - 2024-04-19
 
