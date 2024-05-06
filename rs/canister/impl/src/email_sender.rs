@@ -1,7 +1,7 @@
 use crate::{env, rng};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 use email_sender_core::EmailSender;
 use magic_links::EncryptedMagicLink;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
@@ -12,13 +12,14 @@ use utils::ValidatedEmail;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
 
-pub fn init_from_config(config: EmailSenderConfig) {
+pub fn init_from_config(config: EmailSenderConfig, identity_canister_id: Principal) {
     #[allow(unused_variables)]
     match config {
         EmailSenderConfig::Aws(aws) => {
             #[cfg(feature = "email_sender_aws")]
             {
                 init(email_sender_aws::AwsEmailSender::new(
+                    identity_canister_id,
                     aws.region,
                     aws.target_arn,
                     aws.access_key,

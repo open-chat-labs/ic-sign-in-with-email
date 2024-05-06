@@ -4,13 +4,14 @@ use http::HeaderMap;
 use ic_cdk::api::management_canister::http_request::{
     CanisterHttpRequestArgument, HttpHeader, HttpMethod,
 };
-use magic_links::EncryptedMagicLink;
-use serde::Serialize;
+use ic_principal::Principal;
+use magic_links::{EncryptedMagicLink, MagicLinkMessage};
 use time::format_description::BorrowedFormatItem;
 use time::macros::format_description;
 use time::OffsetDateTime;
 
 pub struct AwsEmailSender {
+    identity_canister_id: Principal,
     region: String,
     target_arn: String,
     access_key: String,
@@ -22,12 +23,14 @@ const LONG_DATETIME: &[BorrowedFormatItem] =
 
 impl AwsEmailSender {
     pub fn new(
+        identity_canister_id: Principal,
         region: String,
         target_arn: String,
         access_key: String,
         secret_key: String,
     ) -> AwsEmailSender {
         AwsEmailSender {
+            identity_canister_id,
             region,
             target_arn,
             access_key,
@@ -61,7 +64,12 @@ impl AwsEmailSender {
         );
 
         let message_deduplication_id = idempotency_id.to_string();
-        let message = serde_json::to_string(&EmailAndMagicLink { email, magic_link }).unwrap();
+        let message = serde_json::to_string(&MagicLinkMessage {
+            email,
+            identity_canister_id: self.identity_canister_id,
+            magic_link,
+        })
+        .unwrap();
 
         let body = [
             ("Action", "Publish"),
@@ -104,12 +112,6 @@ impl AwsEmailSender {
             transform: None,
         }
     }
-}
-
-#[derive(Serialize)]
-struct EmailAndMagicLink {
-    email: String,
-    magic_link: EncryptedMagicLink,
 }
 
 #[async_trait]
