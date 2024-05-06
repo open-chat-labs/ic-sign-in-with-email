@@ -10,8 +10,10 @@ use std::time::Duration;
 #[init]
 fn init(args: InitOrUpgradeArgs) {
     let init_args = args.to_init_args();
-    let email_sender_public_key =
-        RsaPublicKey::from_public_key_pem(&init_args.email_sender_public_key_pem).unwrap();
+    let email_sender_public_key = RsaPublicKey::from_public_key_pem(
+        &init_args.email_sender_public_key_pem.replace("\\n", "\n"),
+    )
+    .unwrap();
     let test_mode = init_args.salt.is_some();
 
     state::init(State::new(email_sender_public_key, test_mode));
