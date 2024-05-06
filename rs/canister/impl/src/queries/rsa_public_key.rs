@@ -23,7 +23,7 @@ fn rsa_encrypt() {
         .encrypt(&mut rng, rsa::Pkcs1v15Encrypt, input.as_bytes())
         .unwrap();
 
-    let result = BASE64_STANDARD.encode(&encrypted);
+    let result = BASE64_STANDARD.encode(encrypted);
 
     println!("{result}");
 }
