@@ -1,6 +1,5 @@
-use rand::distributions::{Distribution, Standard};
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rsa::RsaPrivateKey;
 use std::cell::RefCell;
 
@@ -19,13 +18,6 @@ pub fn set_seed(salt: [u8; 32], entropy: u64) {
 
 pub fn generate_rsa_private_key() -> RsaPrivateKey {
     with_rng(|rng| RsaPrivateKey::new(rng, 2048).unwrap())
-}
-
-pub fn gen<T>() -> T
-where
-    Standard: Distribution<T>,
-{
-    with_rng(|rng| rng.gen())
 }
 
 pub fn with_rng<F: FnOnce(&mut StdRng) -> T, T>(f: F) -> T {

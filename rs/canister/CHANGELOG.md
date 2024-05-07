@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Add `canister_upgrader` to simplify upgrading the canister ([#23](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/23))
+- Add AWS Lambda gateway function to support IPv6 ([#24](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/24))
 
 ### Changed
 

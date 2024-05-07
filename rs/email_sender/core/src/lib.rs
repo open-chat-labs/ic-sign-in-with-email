@@ -7,7 +7,6 @@ pub trait EmailSender: Send + Sync {
         &self,
         email: String,
         magic_link: EncryptedMagicLink,
-        idempotency_id: u64,
         now_millis: u64,
     ) -> Result<(), String>;
 }
@@ -21,7 +20,6 @@ impl EmailSender for NullEmailSender {
         &self,
         _email: String,
         _magic_link: EncryptedMagicLink,
-        _idempotency_id: u64,
         _now_millis: u64,
     ) -> Result<(), String> {
         Ok(())

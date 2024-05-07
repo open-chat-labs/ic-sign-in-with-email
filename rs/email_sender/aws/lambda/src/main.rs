@@ -26,13 +26,13 @@ async fn main() -> Result<(), Error> {
 async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Error> {
     let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let ses_client = SesClient::new(&aws_config);
-    let rsa_private_key_pem = std::env::var("RSA_PRIVATE_KEY_PEM")
-        .expect("RSA_PRIVATE_KEY_PEM not set")
-        .replace("\\n", "\n");
+    let rsa_private_key_pem = std::env::var("RSA_PRIVATE_KEY_PEM")?.replace("\\n", "\n");
     let rsa_private_key = RsaPrivateKey::from_pkcs1_pem(&rsa_private_key_pem)?;
 
     for event in event.payload.records {
-        process_record(event, rsa_private_key.clone(), &ses_client).await?;
+        if let Err(error) = process_record(event, rsa_private_key.clone(), &ses_client).await {
+            error!(?error, "Error processing record");
+        }
     }
 
     Ok(())
@@ -75,7 +75,10 @@ async fn process_record(
         .send()
         .await
     {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            info!("Successfully sent email");
+            Ok(())
+        }
         Err(error) => {
             error!(?error, "Failed to send email");
             Err(error.into())

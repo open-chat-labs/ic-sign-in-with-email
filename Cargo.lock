@@ -334,6 +334,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-sns"
+version = "1.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ded45f70b0484f871a31c427bac376bad4028d1236d205a04842694fa4e6658"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-query",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-smithy-xml",
+ "aws-types",
+ "http 0.2.12",
+ "once_cell",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-sso"
 version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -586,6 +609,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "598e2ade8447dce8d3a15b6159b73354db34257851344b232fb1920c272acc61"
 dependencies = [
  "base64 0.21.7",
+ "bytes",
+ "http 1.1.0",
+ "http-body 1.0.0",
+ "http-serde",
  "serde",
  "serde_json",
  "serde_with",
@@ -809,6 +836,9 @@ name = "bytes"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bytes-utils"
@@ -1446,6 +1476,19 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "time",
+]
+
+[[package]]
+name = "email_sender_aws_gateway"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-sns",
+ "aws_lambda_events",
+ "lambda_runtime",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

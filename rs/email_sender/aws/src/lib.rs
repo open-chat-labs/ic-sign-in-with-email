@@ -13,7 +13,7 @@ use time::OffsetDateTime;
 pub struct AwsEmailSender {
     identity_canister_id: Principal,
     region: String,
-    target_arn: String,
+    function_url: String,
     access_key: String,
     secret_key: String,
 }
@@ -25,14 +25,14 @@ impl AwsEmailSender {
     pub fn new(
         identity_canister_id: Principal,
         region: String,
-        target_arn: String,
+        function_url: String,
         access_key: String,
         secret_key: String,
     ) -> AwsEmailSender {
         AwsEmailSender {
             identity_canister_id,
             region,
-            target_arn,
+            function_url,
             access_key,
             secret_key,
         }
@@ -42,15 +42,20 @@ impl AwsEmailSender {
         &self,
         email: String,
         magic_link: EncryptedMagicLink,
-        idempotency_id: u64,
         now_millis: u64,
     ) -> CanisterHttpRequestArgument {
         let datetime =
             OffsetDateTime::from_unix_timestamp_nanos(now_millis as i128 * 1_000_000).unwrap();
 
-        let region = &self.region;
-        let host = format!("sns.{region}.amazonaws.com");
+        let host = self.function_url.trim_start_matches("https://");
         let url = format!("https://{host}");
+
+        let body = serde_json::to_string(&MagicLinkMessage {
+            email,
+            identity_canister_id: self.identity_canister_id,
+            magic_link,
+        })
+        .unwrap();
 
         let mut header_map = HeaderMap::new();
         header_map.insert(
@@ -60,25 +65,12 @@ impl AwsEmailSender {
         header_map.insert("host", host.parse().unwrap());
         header_map.insert(
             http::header::CONTENT_TYPE,
-            "application/x-www-form-urlencoded".parse().unwrap(),
+            "application/json".parse().unwrap(),
         );
-
-        let message_deduplication_id = idempotency_id.to_string();
-        let message = serde_json::to_string(&MagicLinkMessage {
-            email,
-            identity_canister_id: self.identity_canister_id,
-            magic_link,
-        })
-        .unwrap();
-
-        let body = [
-            ("Action", "Publish"),
-            ("TargetArn", &self.target_arn),
-            ("Message", &message),
-            ("MessageDeduplicationId", &message_deduplication_id),
-            ("MessageGroupId", "0"),
-        ];
-        let body = serde_urlencoded::to_string(body).unwrap();
+        header_map.insert(
+            http::header::CONTENT_LENGTH,
+            body.len().to_string().parse().unwrap(),
+        );
 
         let signature = aws_sign_v4::AwsSign::new(
             "POST",
@@ -88,7 +80,7 @@ impl AwsEmailSender {
             &self.region,
             &self.access_key,
             &self.secret_key,
-            "sns",
+            "lambda",
             &body,
         )
         .sign();
@@ -120,10 +112,9 @@ impl EmailSender for AwsEmailSender {
         &self,
         email: String,
         magic_link: EncryptedMagicLink,
-        idempotency_id: u64,
         now_millis: u64,
     ) -> Result<(), String> {
-        let args = self.build_args(email, magic_link, idempotency_id, now_millis);
+        let args = self.build_args(email, magic_link, now_millis);
 
         let resp =
             ic_cdk::api::management_canister::http_request::http_request(args, 1_000_000_000)
