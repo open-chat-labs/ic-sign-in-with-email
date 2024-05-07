@@ -1,4 +1,8 @@
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use candid::CandidType;
+use rand_core::CryptoRngCore;
+use rsa::{Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 
 mod lifecycle;
@@ -36,6 +40,19 @@ pub struct SignedDelegation {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub enum EmailSenderConfig {
+    Aws(AwsEmailSenderConfig),
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct AwsEmailSenderConfig {
+    pub region: String,
+    pub target_arn: String,
+    pub access_key: String,
+    pub secret_key: String,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub enum EncryptedEmailSenderConfig {
     Aws(EncryptedAwsEmailSenderConfig),
 }
@@ -46,4 +63,71 @@ pub struct EncryptedAwsEmailSenderConfig {
     pub target_arn: String,
     pub access_key_encrypted: String,
     pub secret_key_encrypted: String,
+}
+
+impl EmailSenderConfig {
+    pub fn encrypt<R: CryptoRngCore>(
+        self,
+        rsa_public_key: &RsaPublicKey,
+        rng: &mut R,
+    ) -> EncryptedEmailSenderConfig {
+        match self {
+            EmailSenderConfig::Aws(aws) => {
+                EncryptedEmailSenderConfig::Aws(aws.encrypt(rsa_public_key, rng))
+            }
+        }
+    }
+}
+
+impl EncryptedEmailSenderConfig {
+    pub fn decrypt(self, rsa_private_key: &RsaPrivateKey) -> EmailSenderConfig {
+        match self {
+            EncryptedEmailSenderConfig::Aws(aws) => {
+                EmailSenderConfig::Aws(aws.decrypt(rsa_private_key))
+            }
+        }
+    }
+}
+
+impl AwsEmailSenderConfig {
+    pub fn encrypt<R: CryptoRngCore>(
+        self,
+        rsa_public_key: &RsaPublicKey,
+        rng: &mut R,
+    ) -> EncryptedAwsEmailSenderConfig {
+        EncryptedAwsEmailSenderConfig {
+            region: self.region,
+            target_arn: self.target_arn,
+            access_key_encrypted: encrypt(&self.access_key, rsa_public_key, rng),
+            secret_key_encrypted: encrypt(&self.secret_key, rsa_public_key, rng),
+        }
+    }
+}
+
+impl EncryptedAwsEmailSenderConfig {
+    pub fn decrypt(self, rsa_private_key: &RsaPrivateKey) -> AwsEmailSenderConfig {
+        AwsEmailSenderConfig {
+            region: self.region,
+            target_arn: self.target_arn,
+            access_key: decrypt(&self.access_key_encrypted, rsa_private_key),
+            secret_key: decrypt(&self.secret_key_encrypted, rsa_private_key),
+        }
+    }
+}
+
+fn encrypt<R: CryptoRngCore>(value: &str, rsa_public_key: &RsaPublicKey, rng: &mut R) -> String {
+    BASE64_STANDARD.encode(
+        rsa_public_key
+            .encrypt(rng, Pkcs1v15Encrypt, value.as_bytes())
+            .unwrap(),
+    )
+}
+
+fn decrypt(value: &str, rsa_private_key: &RsaPrivateKey) -> String {
+    String::from_utf8(
+        rsa_private_key
+            .decrypt(Pkcs1v15Encrypt, &BASE64_STANDARD.decode(value).unwrap())
+            .unwrap(),
+    )
+    .unwrap()
 }

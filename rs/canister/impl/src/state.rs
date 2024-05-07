@@ -1,4 +1,3 @@
-use crate::email_sender::EmailSenderConfig;
 use crate::model::magic_links::MagicLinks;
 use crate::model::salt::Salt;
 use crate::{env, Hash};
@@ -9,7 +8,8 @@ use magic_links::{MagicLink, SignedMagicLink};
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
-    Delegation, GetDelegationResponse, SignedDelegation, TimestampMillis, NANOS_PER_MILLISECOND,
+    Delegation, EmailSenderConfig, GetDelegationResponse, SignedDelegation, TimestampMillis,
+    NANOS_PER_MILLISECOND,
 };
 use std::cell::RefCell;
 use utils::{calculate_seed, delegation_signature_msg_hash, ValidatedEmail};
