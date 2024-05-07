@@ -4,7 +4,7 @@ SHELL ["bash", "-c"]
 
 ARG git_commit_id
 ARG rustflags
-ARG rust_version=1.76.0
+ARG rust_version=1.78.0
 
 ENV GIT_COMMIT_ID=$git_commit_id
 ENV TZ=UTC
