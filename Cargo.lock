@@ -1468,6 +1468,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "aws-sign-v4",
+ "candid",
  "email_sender_core",
  "http 1.1.0",
  "ic-cdk 0.13.2",

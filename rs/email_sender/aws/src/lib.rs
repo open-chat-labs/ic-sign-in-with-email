@@ -2,8 +2,10 @@ use async_trait::async_trait;
 use email_sender_core::EmailSender;
 use http::HeaderMap;
 use ic_cdk::api::management_canister::http_request::{
-    CanisterHttpRequestArgument, HttpHeader, HttpMethod,
+    CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs,
+    TransformContext, TransformFunc,
 };
+use ic_cdk::query;
 use ic_principal::Principal;
 use magic_links::{EncryptedMagicLink, MagicLinkMessage};
 use time::format_description::BorrowedFormatItem;
@@ -101,7 +103,13 @@ impl AwsEmailSender {
             method: HttpMethod::POST,
             headers,
             body: Some(body.as_bytes().to_vec()),
-            transform: None,
+            transform: Some(TransformContext {
+                function: TransformFunc::new(
+                    ic_cdk::id(),
+                    "aws_email_sender_transform_http_response".to_string(),
+                ),
+                context: Vec::new(),
+            }),
         }
     }
 }
@@ -126,5 +134,13 @@ impl EmailSender for AwsEmailSender {
         } else {
             Err(format!("Response code: {resp:?}"))
         }
+    }
+}
+
+#[query(name = "aws_email_sender_transform_http_response")]
+fn transform_http_response(args: TransformArgs) -> HttpResponse {
+    HttpResponse {
+        status: args.response.status,
+        ..Default::default()
     }
 }

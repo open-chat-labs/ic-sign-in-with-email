@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 async-trait.workspace = true
 aws-sign-v4.workspace = true
+candid.workspace = true
 email_sender_core.path = "../core"
 http.workspace = true
 ic-cdk.workspace = true
