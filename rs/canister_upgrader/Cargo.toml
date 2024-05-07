@@ -1,0 +1,18 @@
+[package]
+name = "canister_upgrader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+candid.workspace = true
+clap.workspace = true
+dfx-core.workspace = true
+ic-agent.workspace = true
+ic-utils.workspace = true
+rand.workspace = true
+rsa.workspace = true
+sign_in_with_email_canister.path = "../canister/api"
+slog.workspace = true
+tokio.workspace = true
