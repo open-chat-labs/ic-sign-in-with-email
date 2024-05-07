@@ -2379,7 +2379,7 @@ dependencies = [
  "magic_links",
  "pocket-ic",
  "rand",
- "ring 0.17.8",
+ "ring 0.16.20",
  "rsa",
  "serde",
  "sign_in_with_email_canister",
