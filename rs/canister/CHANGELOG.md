@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Added
+
+- Add `canister_upgrader` to simplify upgrading the canister ([#23](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/23))
+
 ### Changed
 
 - Start collecting basic stats per account ([#10](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/10))
