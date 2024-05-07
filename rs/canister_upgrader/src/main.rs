@@ -16,7 +16,7 @@ async fn main() {
         None,
         EmailSenderConfig::Aws(AwsEmailSenderConfig {
             region: opts.aws_region,
-            target_arn: opts.aws_target_arn,
+            function_url: opts.aws_function_url,
             access_key: opts.aws_access_key,
             secret_key: opts.aws_secret_key,
         }),
@@ -39,7 +39,7 @@ struct Opts {
     aws_region: String,
 
     #[arg(long)]
-    aws_target_arn: String,
+    aws_function_url: String,
 
     #[arg(long)]
     aws_access_key: String,

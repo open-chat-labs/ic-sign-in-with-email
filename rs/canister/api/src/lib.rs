@@ -47,7 +47,7 @@ pub enum EmailSenderConfig {
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct AwsEmailSenderConfig {
     pub region: String,
-    pub target_arn: String,
+    pub function_url: String,
     pub access_key: String,
     pub secret_key: String,
 }
@@ -60,7 +60,7 @@ pub enum EncryptedEmailSenderConfig {
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct EncryptedAwsEmailSenderConfig {
     pub region: String,
-    pub target_arn: String,
+    pub function_url: String,
     pub access_key_encrypted: String,
     pub secret_key_encrypted: String,
 }
@@ -97,7 +97,7 @@ impl AwsEmailSenderConfig {
     ) -> EncryptedAwsEmailSenderConfig {
         EncryptedAwsEmailSenderConfig {
             region: self.region,
-            target_arn: self.target_arn,
+            function_url: self.function_url,
             access_key_encrypted: encrypt(&self.access_key, rsa_public_key, rng),
             secret_key_encrypted: encrypt(&self.secret_key, rsa_public_key, rng),
         }
@@ -108,7 +108,7 @@ impl EncryptedAwsEmailSenderConfig {
     pub fn decrypt(self, rsa_private_key: &RsaPrivateKey) -> AwsEmailSenderConfig {
         AwsEmailSenderConfig {
             region: self.region,
-            target_arn: self.target_arn,
+            function_url: self.function_url,
             access_key: decrypt(&self.access_key_encrypted, rsa_private_key),
             secret_key: decrypt(&self.secret_key_encrypted, rsa_private_key),
         }

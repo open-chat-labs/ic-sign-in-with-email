@@ -4,6 +4,7 @@ members = [
     "rs/canister/impl",
     "rs/canister_upgrader",
     "rs/email_sender/aws",
+    "rs/email_sender/aws/gateway",
     "rs/email_sender/aws/lambda",
     "rs/email_sender/aws/template_updater",
     "rs/email_sender/core",
@@ -22,6 +23,7 @@ async-trait = "0.1.79"
 aws-config = "1.3.0"
 aws_lambda_events = { version = "0.15.0", default-features = false }
 aws-sdk-sesv2 = "1.23.0"
+aws-sdk-sns = "1.23.0"
 aws-sign-v4 = "0.3.0"
 base64 = "0.22.0"
 candid = "0.10.6"

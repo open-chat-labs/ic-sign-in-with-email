@@ -1,4 +1,4 @@
-use crate::{env, rng};
+use crate::env;
 use candid::Principal;
 use email_sender_core::EmailSender;
 use magic_links::EncryptedMagicLink;
@@ -17,7 +17,7 @@ pub fn init_from_config(config: EmailSenderConfig, identity_canister_id: Princip
                 init(email_sender_aws::AwsEmailSender::new(
                     identity_canister_id,
                     aws.region,
-                    aws.target_arn,
+                    aws.function_url,
                     aws.access_key,
                     aws.secret_key,
                 ));
@@ -40,9 +40,6 @@ pub async fn send_magic_link(
     magic_link: EncryptedMagicLink,
 ) -> Result<(), String> {
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
-    let idempotency_id = rng::gen();
 
-    sender
-        .send(email.into(), magic_link, idempotency_id, env::now())
-        .await
+    sender.send(email.into(), magic_link, env::now()).await
 }
