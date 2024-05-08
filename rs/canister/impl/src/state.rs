@@ -23,7 +23,6 @@ pub struct State {
     signature_map: SignatureMap,
     email_sender_config: Option<EmailSenderConfig>,
     email_sender_rsa_public_key: RsaPublicKey,
-    #[serde(default)]
     magic_links: MagicLinks,
     rsa_private_key: Option<RsaPrivateKey>,
     salt: Salt,
@@ -66,6 +65,10 @@ impl State {
             salt: Salt::default(),
             test_mode,
         }
+    }
+
+    pub fn email_sender_rsa_public_key(&self) -> &RsaPublicKey {
+        &self.email_sender_rsa_public_key
     }
 
     pub fn email_sender_config(&self) -> Option<&EmailSenderConfig> {

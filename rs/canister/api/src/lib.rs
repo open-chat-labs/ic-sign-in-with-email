@@ -61,8 +61,20 @@ pub enum EncryptedEmailSenderConfig {
 pub struct EncryptedAwsEmailSenderConfig {
     pub region: String,
     pub function_url: String,
-    pub access_key_encrypted: String,
+    pub access_key: String,
     pub secret_key_encrypted: String,
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub enum EmailSenderConfigPublic {
+    Aws(AwsEmailSenderConfigPublic),
+}
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
+pub struct AwsEmailSenderConfigPublic {
+    pub region: String,
+    pub function_url: String,
+    pub access_key: String,
 }
 
 impl EmailSenderConfig {
@@ -98,7 +110,7 @@ impl AwsEmailSenderConfig {
         EncryptedAwsEmailSenderConfig {
             region: self.region,
             function_url: self.function_url,
-            access_key_encrypted: encrypt(&self.access_key, rsa_public_key, rng),
+            access_key: self.access_key,
             secret_key_encrypted: encrypt(&self.secret_key, rsa_public_key, rng),
         }
     }
@@ -109,8 +121,26 @@ impl EncryptedAwsEmailSenderConfig {
         AwsEmailSenderConfig {
             region: self.region,
             function_url: self.function_url,
-            access_key: decrypt(&self.access_key_encrypted, rsa_private_key),
+            access_key: self.access_key,
             secret_key: decrypt(&self.secret_key_encrypted, rsa_private_key),
+        }
+    }
+}
+
+impl From<&EmailSenderConfig> for EmailSenderConfigPublic {
+    fn from(value: &EmailSenderConfig) -> Self {
+        match value {
+            EmailSenderConfig::Aws(aws) => EmailSenderConfigPublic::Aws(aws.into()),
+        }
+    }
+}
+
+impl From<&AwsEmailSenderConfig> for AwsEmailSenderConfigPublic {
+    fn from(value: &AwsEmailSenderConfig) -> Self {
+        AwsEmailSenderConfigPublic {
+            region: value.region.clone(),
+            function_url: value.function_url.clone(),
+            access_key: value.access_key.clone(),
         }
     }
 }

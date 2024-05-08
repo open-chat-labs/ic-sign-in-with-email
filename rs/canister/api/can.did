@@ -1,9 +1,19 @@
+type AwsEmailSenderConfigPublic = record {
+  region : text;
+  function_url : text;
+  access_key : text;
+};
 type Delegation = record { pubkey : blob; expiration : nat64 };
+type EmailSenderConfigPublic = variant { Aws : AwsEmailSenderConfigPublic };
+type EmailSenderConfigResponse = record {
+  email_sender_rsa_public_key : text;
+  email_sender_config : opt EmailSenderConfigPublic;
+};
 type EncryptedAwsEmailSenderConfig = record {
   region : text;
+  function_url : text;
+  access_key : text;
   secret_key_encrypted : text;
-  target_arn : text;
-  access_key_encrypted : text;
 };
 type EncryptedEmailSenderConfig = variant {
   Aws : EncryptedAwsEmailSenderConfig;
@@ -50,6 +60,7 @@ type UpgradeArgs = record {
   email_sender_config : opt EncryptedEmailSenderConfig;
 };
 service : (InitOrUpgradeArgs) -> {
+  email_sender_config : () -> (EmailSenderConfigResponse) query;
   generate_magic_link : (GenerateMagicLinkArgs) -> (GenerateMagicLinkResponse);
   get_delegation : (GetDelegationArgs) -> (GetDelegationResponse) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
