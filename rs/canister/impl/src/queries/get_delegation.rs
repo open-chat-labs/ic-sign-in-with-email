@@ -10,12 +10,15 @@ fn get_delegation(args: GetDelegationArgs) -> GetDelegationResponse {
     };
 
     state::read(|s| {
-        s.get_delegation(
-            email,
-            Delegation {
-                pubkey: args.session_key,
-                expiration: args.expiration,
-            },
-        )
+        let seed = s.calculate_seed(&email);
+        let delegation = Delegation {
+            pubkey: args.session_key,
+            expiration: args.expiration,
+        };
+        if let Some(signed_delegation) = s.get_delegation(seed, delegation) {
+            GetDelegationResponse::Success(signed_delegation)
+        } else {
+            GetDelegationResponse::NotFound
+        }
     })
 }

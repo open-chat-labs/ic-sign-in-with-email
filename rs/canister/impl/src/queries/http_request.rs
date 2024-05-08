@@ -1,3 +1,4 @@
+use crate::state::AuthResult;
 use crate::{env, state};
 use ic_cdk::{query, update};
 use ic_http_certification::{HttpRequest, HttpResponse};
@@ -31,43 +32,28 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
             let signed_magic_link =
                 SignedMagicLink::from_hex_strings(&ciphertext, &encrypted_key, &nonce, &signature);
 
-            let result = match state::read(|s| s.unwrap_magic_link(signed_magic_link)) {
-                Ok(magic_link) => {
-                    if !magic_link.expired(env::now()) {
-                        if update {
-                            let success =
-                                state::mutate(|s| s.process_magic_link(magic_link, env::now()));
-                            if success {
-                                Ok(())
-                            } else {
-                                Err("Invalid link".to_string())
-                            }
-                        } else {
-                            Ok(())
-                        }
-                    } else {
-                        Err("Link expired".to_string())
-                    }
-                }
-                Err(error) => Err(error),
+            let (status_code, body, upgrade) = match state::mutate(|s| {
+                s.process_auth_request(signed_magic_link, update, env::now())
+            }) {
+                AuthResult::Success => (
+                    200,
+                    "Successfully signed in! You may now close this tab and return to OpenChat"
+                        .to_string(),
+                    false,
+                ),
+                AuthResult::RequiresUpgrade => (200, "".to_string(), true),
+                AuthResult::LinkExpired => (400, "Link expired".to_string(), false),
+                AuthResult::LinkInvalid(error) => (400, format!("Link invalid: {error}"), false),
             };
 
-            match result {
-                Ok(_) => HttpResponse {
-                    status_code: 200,
-                    headers: vec![],
-                    body: Vec::new(),
-                    upgrade: if update { None } else { Some(true) },
-                },
-                Err(error) => HttpResponse {
-                    status_code: 400,
-                    headers: vec![
-                        ("content-type".to_string(), "application/text".to_string()),
-                        ("content-length".to_string(), error.len().to_string()),
-                    ],
-                    body: error.into_bytes(),
-                    upgrade: None,
-                },
+            HttpResponse {
+                status_code,
+                headers: vec![
+                    ("content-type".to_string(), "text/plain".to_string()),
+                    ("content-length".to_string(), body.len().to_string()),
+                ],
+                body: body.into_bytes(),
+                upgrade: upgrade.then_some(true),
             }
         }
         _ => not_found(),

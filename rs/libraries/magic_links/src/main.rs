@@ -3,7 +3,7 @@ use magic_links::generate;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rsa::RsaPrivateKey;
-use utils::ValidatedEmail;
+use utils::{calculate_seed, ValidatedEmail};
 
 const TEST_SALT: [u8; 32] = [1; 32];
 const EMAIL_SENDER_RSA_SEED: [u8; 32] = [2; 32];
@@ -18,8 +18,8 @@ fn main() {
     let rsa_public_key = rsa_private_key.to_public_key();
     let email_sender_rsa_private_key =
         RsaPrivateKey::new(&mut StdRng::from_seed(EMAIL_SENDER_RSA_SEED), 2048).unwrap();
-
-    let magic_link = generate(email, session_key, None, TEST_SALT, opts.timestamp);
+    let seed = calculate_seed(TEST_SALT, &email);
+    let magic_link = generate(seed, session_key, None, opts.timestamp);
     let encrypted = magic_link.encrypt(rsa_public_key, &mut rng);
     let signed = encrypted.sign(email_sender_rsa_private_key);
 
