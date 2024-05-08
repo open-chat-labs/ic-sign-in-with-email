@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Added 
+
+- Add `email_sender_config` query endpoint ([#28](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/28))
+
 ## [[0.5.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.5.0)] - 2024-05-07
 
 ### Added
