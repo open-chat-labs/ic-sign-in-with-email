@@ -15,14 +15,9 @@ async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkRe
     let start = env::now();
 
     let (magic_link, encrypted_magic_link) = state::read(|s| {
-        let salt = s.salt();
-        let magic_link = magic_links::generate(
-            email.clone(),
-            args.session_key,
-            args.max_time_to_live,
-            salt,
-            start,
-        );
+        let seed = s.calculate_seed(&email);
+        let magic_link =
+            magic_links::generate(seed, args.session_key, args.max_time_to_live, start);
         let public_key = s.rsa_public_key().unwrap();
         let encrypted = rng::with_rng(|rng| magic_link.encrypt(public_key, rng));
 

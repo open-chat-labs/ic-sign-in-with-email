@@ -15,19 +15,15 @@ use sign_in_with_email_canister::{
     Delegation, Milliseconds, Nanoseconds, TimestampMillis, DEFAULT_SESSION_EXPIRATION_PERIOD,
     MAX_SESSION_EXPIRATION_PERIOD, NANOS_PER_MILLISECOND,
 };
-use utils::{calculate_seed, ValidatedEmail};
 
 const MAGIC_LINK_EXPIRATION: Milliseconds = 10 * 60 * 1000; // 10 minutes
 
 pub fn generate(
-    email: ValidatedEmail,
+    seed: [u8; 32],
     session_key: Vec<u8>,
     max_time_to_live: Option<Nanoseconds>,
-    salt: [u8; 32],
     now: TimestampMillis,
 ) -> MagicLink {
-    let seed = calculate_seed(salt, &email);
-
     let delta = Nanoseconds::min(
         max_time_to_live.unwrap_or(DEFAULT_SESSION_EXPIRATION_PERIOD),
         MAX_SESSION_EXPIRATION_PERIOD,
