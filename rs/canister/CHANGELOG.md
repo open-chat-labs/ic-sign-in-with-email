@@ -1,12 +1,11 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
-### Added
+### Added 
 
 - Add `email_sender_config` query endpoint ([#28](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/28))
 - Display outcome after clicking on magic link ([#29](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/29))
@@ -15,49 +14,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Add `canister_upgrader` to simplify upgrading the
-  canister ([#23](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/23))
-- Add AWS Lambda gateway function to support
-  IPv6 ([#24](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/24))
+- Add `canister_upgrader` to simplify upgrading the canister ([#23](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/23))
+- Add AWS Lambda gateway function to support IPv6 ([#24](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/24))
 
 ### Changed
 
 - Start collecting basic stats per account ([#10](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/10))
-- Pass up session key when generating verification
-  code ([#12](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/12))
+- Pass up session key when generating verification code ([#12](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/12))
 - Allow specifying the RNG salt for tests ([#14](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/14))
-- Use magic links rather than verification
-  codes ([#13](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/13))
+- Use magic links rather than verification codes ([#13](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/13))
 - Keep track of active magic links ([#16](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/16))
-- Include `identity_canister_id` when pushing magic
-  links ([#19](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/19))
-- Move `EmailSenderConfig` into `api` package so that it is
-  public ([#22](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/22))
+- Include `identity_canister_id` when pushing magic links ([#19](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/19))
+- Move `EmailSenderConfig` into `api` package so that it is public ([#22](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/22))
 - Bump Rust version to 1.78.0 ([#25](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/25))
-- Transform HTTP response to only return the status
-  code ([#26](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/26))
+- Transform HTTP response to only return the status code ([#26](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/26))
 
 ## [[0.4.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.4.0)] - 2024-04-19
 
 ### Changed
 
 - Avoid storing any email addresses ([#6](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/6))
-- Return `blocked_duration` rather
-  than `blocked_until` ([#7](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/7))
+- Return `blocked_duration` rather than `blocked_until` ([#7](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/7))
 
 ### Fixed
 
-- Remove verification code after successful
-  attempt ([#8](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/8))
+- Remove verification code after successful attempt ([#8](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/8))
 
 ## [[0.3.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.3.0)] - 2024-04-19
 
 ### Changed
 
-- Introduce `ValidatedEmail` type to force validation in all
-  cases ([#3](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/3))
-- Mark codes with any failed attempts as failed when
-  removed ([#4](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/4))
+- Introduce `ValidatedEmail` type to force validation in all cases ([#3](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/3))
+- Mark codes with any failed attempts as failed when removed ([#4](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/4))
 
 ## [[0.2.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.2.0)] - 2024-04-17
 
