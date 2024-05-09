@@ -1,3 +1,5 @@
+use querystring::QueryParams;
+
 mod email_sender;
 mod env;
 mod guards;
@@ -28,4 +30,11 @@ mod generate_candid_file {
         export_candid!();
         write(dir.join("can.did"), __export_service()).unwrap()
     }
+}
+
+fn get_query_param_value(params: &QueryParams, key: &str) -> Option<String> {
+    params
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, v)| v.to_string())
 }
