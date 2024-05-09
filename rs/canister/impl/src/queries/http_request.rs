@@ -1,9 +1,8 @@
 use crate::state::AuthResult;
-use crate::{env, state};
+use crate::{env, get_query_param_value, state};
 use ic_cdk::{query, update};
 use ic_http_certification::{HttpRequest, HttpResponse};
 use magic_links::SignedMagicLink;
-use querystring::QueryParams;
 
 #[query]
 fn http_request(request: HttpRequest) -> HttpResponse {
@@ -58,13 +57,6 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
         }
         _ => not_found(),
     }
-}
-
-fn get_query_param_value(params: &QueryParams, key: &str) -> Option<String> {
-    params
-        .iter()
-        .find(|(k, _)| *k == key)
-        .map(|(_, v)| v.to_string())
 }
 
 fn not_found() -> HttpResponse {
