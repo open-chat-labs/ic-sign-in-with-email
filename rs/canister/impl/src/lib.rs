@@ -13,6 +13,13 @@ mod updates;
 
 type Hash = [u8; 32];
 
+fn get_query_param_value(params: &QueryParams, key: &str) -> Option<String> {
+    params
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, v)| v.to_string())
+}
+
 #[cfg(test)]
 mod generate_candid_file {
     use ic_cdk::export_candid;
@@ -30,11 +37,4 @@ mod generate_candid_file {
         export_candid!();
         write(dir.join("can.did"), __export_service()).unwrap()
     }
-}
-
-fn get_query_param_value(params: &QueryParams, key: &str) -> Option<String> {
-    params
-        .iter()
-        .find(|(k, _)| *k == key)
-        .map(|(_, v)| v.to_string())
 }
