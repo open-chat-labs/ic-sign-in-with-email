@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Changed
+
+- Exit early if Docker build fails ([#31](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/31))
+
 ## [[0.6.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.6.0)] - 2024-05-08
 
 ### Added 

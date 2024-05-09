@@ -19,7 +19,7 @@ done
 
 echo "CommitId: $GIT_COMMIT_ID"
 
-docker build -t sign_in_with_email --build-arg git_commit_id=$GIT_COMMIT_ID --build-arg rustflags="$RUSTFLAGS" .
+docker build -t sign_in_with_email --build-arg git_commit_id=$GIT_COMMIT_ID --build-arg rustflags="$RUSTFLAGS" . || exit 1
 
 container_id=$(docker create sign_in_with_email)
 rm -rf wasms
