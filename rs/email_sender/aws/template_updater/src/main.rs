@@ -18,7 +18,7 @@ async fn main() -> Result<(), Error> {
 
 const SUBJECT: &str = "OpenChat sign in link";
 const MESSAGE_HTML: &str =
-    "<h4>Click here to sign in to OpenChat:<p/><p><a href=\"{{magic_link}}\">LINK</a></p></h4>";
+    "<p>Click here to sign in to OpenChat<p/><h4><a href=\"{{magic_link}}\">sign in link</a></h4>";
 
 async fn function_handler(_event: LambdaEvent<()>) -> Result<(), Error> {
     let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
