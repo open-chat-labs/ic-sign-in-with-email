@@ -187,7 +187,7 @@ impl SignedMagicLink {
 
     pub fn build_querystring(&self) -> String {
         format!(
-            "?c={}&k={}&n={}&s={}",
+            "?auth&c={}&k={}&n={}&s={}",
             hex_to_string(&self.ciphertext),
             hex_to_string(&self.encrypted_key),
             hex_to_string(&self.nonce),

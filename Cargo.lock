@@ -917,7 +917,7 @@ dependencies = [
 
 [[package]]
 name = "canister_upgrader"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "candid",
  "clap",
@@ -1464,7 +1464,7 @@ dependencies = [
 
 [[package]]
 name = "email_sender_aws"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "aws-sign-v4",
@@ -1481,7 +1481,7 @@ dependencies = [
 
 [[package]]
 name = "email_sender_aws_gateway"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "aws-config",
  "aws-sdk-sns",
@@ -1494,7 +1494,7 @@ dependencies = [
 
 [[package]]
 name = "email_sender_aws_lambda"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "aws-config",
  "aws-sdk-sesv2",
@@ -1512,7 +1512,7 @@ dependencies = [
 
 [[package]]
 name = "email_sender_aws_template_updater"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "aws-config",
  "aws-sdk-sesv2",
@@ -1526,7 +1526,7 @@ dependencies = [
 
 [[package]]
 name = "email_sender_core"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "magic_links",
@@ -2415,7 +2415,7 @@ dependencies = [
 
 [[package]]
 name = "integration_tests"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "candid",
  "ic-agent",
@@ -2638,7 +2638,7 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 
 [[package]]
 name = "magic_links"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "aes-gcm",
  "clap",
@@ -3872,7 +3872,7 @@ checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "sign_in_with_email_canister"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.0",
  "candid",
@@ -3884,7 +3884,7 @@ dependencies = [
 
 [[package]]
 name = "sign_in_with_email_canister_impl"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.0",
  "candid",
@@ -4201,7 +4201,7 @@ dependencies = [
 
 [[package]]
 name = "test_utils"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "rand",
  "rsa",
@@ -4615,7 +4615,7 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 
 [[package]]
 name = "utils"
-version = "0.8.0"
+version = "0.7.0"
 dependencies = [
  "email_address",
  "rsa",

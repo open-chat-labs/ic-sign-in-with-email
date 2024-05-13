@@ -49,13 +49,13 @@ async fn process_record(
 
     let MagicLinkMessage {
         email,
-        identity_canister_id,
+        identity_canister_id: _,
         magic_link,
     } = serde_json::from_str(&body)?;
 
     let signed = magic_link.sign(rsa_private_key);
     let querystring = signed.build_querystring();
-    let magic_link = format!("https://{identity_canister_id}.raw.icp0.io/auth{querystring}");
+    let magic_link = format!("https://oc.app/home{querystring}");
     let template_data = TemplateData { magic_link };
 
     match ses_client
