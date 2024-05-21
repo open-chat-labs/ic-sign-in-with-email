@@ -33,7 +33,6 @@ base64 = "0.22.0"
 candid = "0.10.6"
 canister_sig_util = { git = "https://github.com/dfinity/internet-identity", rev = "cdf3ffd7358d775e1da31183abe2b54383187579" }
 clap = "4.5.4"
-dfx-core = { git = "https://github.com/dfinity/sdk", rev = "c7fa9267950836fb2e8af2f03a6531ead9289f81" }
 email_address = "0.2.4"
 getrandom = { version = "0.2.14", features = ["custom"] }
 hex = "0.4.3"

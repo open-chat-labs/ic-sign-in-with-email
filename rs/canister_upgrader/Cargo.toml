@@ -8,7 +8,6 @@ edition.workspace = true
 [dependencies]
 candid.workspace = true
 clap.workspace = true
-dfx-core.workspace = true
 ic-agent.workspace = true
 ic-utils.workspace = true
 rand.workspace = true

@@ -1,5 +1,6 @@
 use candid::Principal;
 use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
+use ic_agent::identity::BasicIdentity;
 use ic_agent::{Agent, Identity};
 use ic_utils::interfaces::management_canister::builders::InstallMode;
 use ic_utils::interfaces::ManagementCanister;
@@ -9,7 +10,7 @@ use rsa::RsaPublicKey;
 use sign_in_with_email_canister::{EmailSenderConfig, InitOrUpgradeArgs, UpgradeArgs};
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub async fn upgrade_canister(
     identity: Box<dyn Identity>,
@@ -95,11 +96,22 @@ fn read_canister_wasm() -> Vec<u8> {
 }
 
 pub fn get_dfx_identity(name: &str) -> Box<dyn Identity> {
-    let logger = slog::Logger::root(slog::Discard, slog::o!());
-    let mut identity_manager = dfx_core::identity::IdentityManager::new(&logger, &None).unwrap();
-    identity_manager
-        .instantiate_identity_from_name(name, &logger)
-        .unwrap()
+    let config_dfx_dir_path = get_user_dfx_config_dir().unwrap();
+    let pem_path = config_dfx_dir_path
+        .join("identity")
+        .join(name)
+        .join("identity.pem");
+    if !Path::exists(pem_path.as_path()) {
+        panic!("Pem file not found at: {}", pem_path.as_path().display());
+    }
+    Box::new(BasicIdentity::from_pem_file(pem_path.as_path()).unwrap())
+}
+
+fn get_user_dfx_config_dir() -> Option<PathBuf> {
+    let config_root = std::env::var_os("DFX_CONFIG_ROOT");
+    let home = std::env::var_os("HOME")?;
+    let root = config_root.unwrap_or(home);
+    Some(PathBuf::from(root).join(".config").join("dfx"))
 }
 
 fn is_mainnet(url: &str) -> bool {
