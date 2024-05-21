@@ -20,7 +20,7 @@ const SUBJECT: &str = "OpenChat sign in link";
 const MESSAGE_HTML: &str =
     "<p>Click here to sign in to OpenChat<p/><h4><a href=\"{{magic_link}}\">sign in link</a></h4>";
 
-async fn function_handler(_event: LambdaEvent<()>) -> Result<(), Error> {
+async fn function_handler(_event: LambdaEvent<u32>) -> Result<(), Error> {
     let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let ses_client = SesClient::new(&aws_config);
 
