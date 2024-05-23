@@ -20,7 +20,7 @@ else
 fi
 
 echo "Building canister wasm"
-dfx build event_store --ic --check
+dfx build sign_in_with_email --ic --check
 
 cd rs/integration_tests
 echo "PocketIC download starting"
