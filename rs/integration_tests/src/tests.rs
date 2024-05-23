@@ -3,14 +3,10 @@ use crate::rng::random_principal;
 use crate::{client, TestEnv};
 use ic_agent::Identity;
 use ic_http_certification::HttpRequest;
-use magic_links::MagicLink;
-use rand::thread_rng;
 use sign_in_with_email_canister::{
-    Delegation, GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs,
-    GetDelegationResponse,
+    GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
 };
-use test_utils::{email_sender_rsa_private_key, rsa_private_key, TEST_SALT};
-use utils::ValidatedEmail;
+use test_utils::generate_magic_link;
 
 #[test]
 fn end_to_end() {
@@ -42,18 +38,12 @@ fn end_to_end() {
         panic!();
     };
 
-    let seed = utils::calculate_seed(
-        TEST_SALT,
-        &ValidatedEmail::try_from(email.to_string()).unwrap(),
+    let signed = generate_magic_link(
+        email,
+        session_key.clone(),
+        generate_magic_link_success.created,
+        generate_magic_link_success.expiration,
     );
-    let delegation = Delegation {
-        pubkey: session_key.clone(),
-        expiration: generate_magic_link_success.expiration,
-    };
-    let magic_link = MagicLink::new(seed, delegation, generate_magic_link_success.created);
-    let private_key = rsa_private_key();
-    let encrypted = magic_link.encrypt(private_key.to_public_key(), &mut thread_rng());
-    let signed = encrypted.sign(email_sender_rsa_private_key());
 
     let http_request = HttpRequest {
         method: "GET".to_string(),

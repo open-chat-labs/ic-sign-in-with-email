@@ -6,6 +6,8 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+magic_links.path = "../magic_links"
 rand.workspace = true
 rsa.workspace = true
 sign_in_with_email_canister.path = "../../canister/api"
+utils.path = "../utils"
