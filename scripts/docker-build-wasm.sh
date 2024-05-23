@@ -24,7 +24,7 @@ docker build -t sign_in_with_email --build-arg git_commit_id=$GIT_COMMIT_ID --bu
 container_id=$(docker create sign_in_with_email)
 rm -rf wasms
 mkdir wasms
-docker cp $container_id:/build/.dfx/local/canisters/sign_in_with_email/sign_in_with_email.wasm.gz wasms
+docker cp $container_id:/build/.dfx/ic/canisters/sign_in_with_email/sign_in_with_email.wasm.gz wasms
 docker rm --volumes $container_id
 
 cd wasms

@@ -8,7 +8,7 @@ ARG rust_version=1.78.0
 
 ENV GIT_COMMIT_ID=$git_commit_id
 ENV TZ=UTC
-ENV DFX_VERSION=0.19.0
+ENV DFX_VERSION=0.20.0
 ENV PATH="/root/.local/share/dfx/bin:$PATH"
 ENV RUSTFLAGS=$rustflags
 
@@ -31,4 +31,4 @@ RUN DFXVM_INIT_YES=true sh -ci "$(curl -fsSL https://internetcomputer.org/instal
 COPY . /build
 WORKDIR /build
 
-RUN dfx build
+RUN dfx build --ic --check
