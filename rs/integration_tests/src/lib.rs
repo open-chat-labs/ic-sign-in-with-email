@@ -43,6 +43,6 @@ fn canister_wasm_path() -> PathBuf {
     .join(".dfx")
     .join("ic")
     .join("canisters")
-    .join("event_store")
+    .join("sign_in_with_email")
     .join("sign_in_with_email.wasm.gz")
 }
