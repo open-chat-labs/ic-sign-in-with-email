@@ -3290,9 +3290,11 @@ dependencies = [
 name = "test_utils"
 version = "0.7.0"
 dependencies = [
+ "magic_links",
  "rand",
  "rsa",
  "sign_in_with_email_canister",
+ "utils",
 ]
 
 [[package]]

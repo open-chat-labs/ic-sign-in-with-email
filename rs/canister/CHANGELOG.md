@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added 
 
 - Add an explicit endpoint for handling magic links ([#33](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/33))
+- Add `test_utils::generate_magic_link` to simplify tests ([#38](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/38))
 
 ### Changed
 
