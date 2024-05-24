@@ -8,6 +8,9 @@ edition.workspace = true
 [dev-dependencies]
 candid.workspace = true
 ic-agent.workspace = true
+ic-cbor.workspace = true
+ic-certificate-verification.workspace = true
+ic-certification.workspace = true
 ic-http-certification.workspace = true
 magic_links.path = "../libraries/magic_links"
 pocket-ic.workspace = true

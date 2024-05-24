@@ -27,5 +27,8 @@ pub fn setup_new_env() -> PocketIc {
         ", &path, &env::current_dir().map(|x| x.display().to_string()).unwrap_or_else(|_| "an unknown directory".to_string()));
     }
 
-    PocketIcBuilder::new().with_application_subnet().build()
+    PocketIcBuilder::new()
+        .with_nns_subnet()
+        .with_application_subnet()
+        .build()
 }

@@ -2,6 +2,9 @@ use crate::identity::create_session_identity;
 use crate::rng::random_principal;
 use crate::{client, TestEnv};
 use ic_agent::Identity;
+use ic_cbor::{parse_cbor, CborValue, CertificateToCbor};
+use ic_certificate_verification::VerifyCertificate;
+use ic_certification::Certificate;
 use ic_http_certification::HttpRequest;
 use sign_in_with_email_canister::{
     GenerateMagicLinkArgs, GenerateMagicLinkResponse, GetDelegationArgs, GetDelegationResponse,
@@ -75,10 +78,24 @@ fn end_to_end() {
         },
     );
 
-    assert!(matches!(
-        get_delegation_response,
-        GetDelegationResponse::Success(_)
-    ));
+    let delegation = match get_delegation_response {
+        GetDelegationResponse::Success(d) => d,
+        response => panic!("GetDelegation error: {response:?}"),
+    };
+
+    let cbor = parse_cbor(&delegation.signature).unwrap();
+    let CborValue::Map(map) = cbor else {
+        panic!("Expected CBOR map")
+    };
+
+    let Some(CborValue::ByteString(certificate)) = map.get("certificate") else {
+        panic!("Couldn't find certificate")
+    };
+
+    let certificate = Certificate::from_cbor(certificate).unwrap();
+    assert!(certificate
+        .verify(canister_id.as_slice(), &env.root_key().unwrap())
+        .is_ok());
 }
 
 #[test]
