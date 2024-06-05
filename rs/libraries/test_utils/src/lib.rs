@@ -1,4 +1,4 @@
-use magic_links::{MagicLink, SignedMagicLink};
+use magic_links::{generate_random_3digit_code, MagicLink, SignedMagicLink};
 use rand::rngs::StdRng;
 use rand::{thread_rng, SeedableRng};
 use rsa::pkcs1::LineEnding;
@@ -31,7 +31,8 @@ pub fn generate_magic_link(
         pubkey: session_key,
         expiration,
     };
-    let magic_link = MagicLink::new(seed, delegation, created);
+    let code = generate_random_3digit_code(&mut thread_rng());
+    let magic_link = MagicLink::new(seed, delegation, code, created);
     let private_key = rsa_private_key();
     let encrypted = magic_link.encrypt(private_key.to_public_key(), &mut thread_rng());
 

@@ -24,4 +24,5 @@ pub struct GenerateMagicLinkSuccess {
     #[serde(with = "serde_bytes")]
     pub user_key: Vec<u8>,
     pub expiration: TimestampNanos,
+    pub code: String,
 }

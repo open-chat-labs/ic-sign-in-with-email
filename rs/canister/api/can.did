@@ -45,6 +45,7 @@ type HandleMagicLinkResponse = variant {
   Success;
   LinkExpired;
   LinkInvalid : text;
+  CodeIncorrect;
 };
 type HttpRequest = record {
   url : text;
@@ -73,4 +74,4 @@ service : (InitOrUpgradeArgs) -> {
   http_request : (HttpRequest) -> (HttpResponse) query;
   http_request_update : (HttpRequest) -> (HttpResponse);
   rsa_public_key : () -> (opt text) query;
-}
+};

@@ -27,12 +27,13 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
             let encrypted_key = get_query_param_value(&params, "k").unwrap();
             let nonce = get_query_param_value(&params, "n").unwrap();
             let signature = get_query_param_value(&params, "s").unwrap();
+            let code = get_query_param_value(&params, "u").unwrap();
 
             let signed_magic_link =
                 SignedMagicLink::from_hex_strings(&ciphertext, &encrypted_key, &nonce, &signature);
 
             let (status_code, body, upgrade) = match state::mutate(|s| {
-                s.process_auth_request(signed_magic_link, update, env::now())
+                s.process_auth_request(signed_magic_link, code, update, env::now())
             }) {
                 AuthResult::Success => (
                     200,
@@ -43,6 +44,7 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
                 AuthResult::RequiresUpgrade => (200, "".to_string(), true),
                 AuthResult::LinkExpired => (400, "Link expired".to_string(), false),
                 AuthResult::LinkInvalid(error) => (400, format!("Link invalid: {error}"), false),
+                AuthResult::CodeIncorrect => (400, "Code incorrect".to_string(), false),
             };
 
             HttpResponse {

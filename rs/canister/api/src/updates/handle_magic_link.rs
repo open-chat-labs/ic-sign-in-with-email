@@ -11,4 +11,5 @@ pub enum HandleMagicLinkResponse {
     Success,
     LinkExpired,
     LinkInvalid(String),
+    CodeIncorrect,
 }
