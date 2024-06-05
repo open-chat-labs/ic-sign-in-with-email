@@ -18,10 +18,11 @@ use sign_in_with_email_canister::{
 
 const MAGIC_LINK_EXPIRATION: Milliseconds = 10 * 60 * 1000; // 10 minutes
 
-pub fn generate(
+pub fn generate<R: CryptoRngCore>(
     seed: [u8; 32],
     session_key: Vec<u8>,
     max_time_to_live: Option<Nanoseconds>,
+    rng: &mut R,
     now: TimestampMillis,
 ) -> MagicLink {
     let delta = Nanoseconds::min(
@@ -29,6 +30,7 @@ pub fn generate(
         MAX_SESSION_EXPIRATION_PERIOD,
     );
 
+    let code = generate_random_3digit_code(rng);
     let now_nanos = now * NANOS_PER_MILLISECOND;
     let expiration = now_nanos.saturating_add(delta);
     let delegation = Delegation {
@@ -36,7 +38,12 @@ pub fn generate(
         expiration,
     };
 
-    MagicLink::new(seed, delegation, now)
+    MagicLink::new(seed, delegation, code, now)
+}
+
+pub fn generate_random_3digit_code<R: CryptoRngCore>(rng: &mut R) -> String {
+    let code = rng.next_u32() % 1000;
+    format!("{:0>3}", code)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,14 +51,21 @@ pub struct MagicLink {
     created: TimestampMillis,
     seed: [u8; 32],
     delegation: Delegation,
+    code: String,
 }
 
 impl MagicLink {
-    pub fn new(seed: [u8; 32], delegation: Delegation, now: TimestampMillis) -> MagicLink {
+    pub fn new(
+        seed: [u8; 32],
+        delegation: Delegation,
+        code: String,
+        now: TimestampMillis,
+    ) -> MagicLink {
         MagicLink {
             created: now,
             seed,
             delegation,
+            code,
         }
     }
 
@@ -87,6 +101,10 @@ impl MagicLink {
 
     pub fn delegation(&self) -> &Delegation {
         &self.delegation
+    }
+
+    pub fn code(&self) -> &str {
+        &self.code
     }
 
     pub fn expired(&self, now: TimestampMillis) -> bool {
@@ -228,6 +246,7 @@ mod tests {
                 pubkey: vec![2; 32],
                 expiration: 1000000000,
             },
+            code: "123".to_string(),
         };
 
         let mut rng = rand::thread_rng();
@@ -246,5 +265,6 @@ mod tests {
         assert_eq!(output.seed, input.seed);
         assert_eq!(output.delegation.pubkey, input.delegation.pubkey);
         assert_eq!(output.delegation.expiration, input.delegation.expiration);
+        assert_eq!(output.code, input.code);
     }
 }

@@ -32,6 +32,7 @@ type GenerateMagicLinkResponse = variant {
 type GenerateMagicLinkSuccess = record {
   created : nat64;
   user_key : blob;
+  code : text;
   expiration : nat64;
 };
 type GetDelegationArgs = record {
@@ -42,6 +43,7 @@ type GetDelegationArgs = record {
 type GetDelegationResponse = variant { NotFound; Success : SignedDelegation };
 type HandleMagicLinkArgs = record { link : text };
 type HandleMagicLinkResponse = variant {
+  CodeIncorrect;
   Success;
   LinkExpired;
   LinkInvalid : text;

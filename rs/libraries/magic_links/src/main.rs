@@ -19,7 +19,7 @@ fn main() {
     let email_sender_rsa_private_key =
         RsaPrivateKey::new(&mut StdRng::from_seed(EMAIL_SENDER_RSA_SEED), 2048).unwrap();
     let seed = calculate_seed(TEST_SALT, &email);
-    let magic_link = generate(seed, session_key, None, opts.timestamp);
+    let magic_link = generate(seed, session_key, None, &mut rng, opts.timestamp);
     let encrypted = magic_link.encrypt(rsa_public_key, &mut rng);
     let signed = encrypted.sign(email_sender_rsa_private_key);
 

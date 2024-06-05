@@ -106,6 +106,7 @@ impl State {
     pub fn process_auth_request(
         &mut self,
         signed_magic_link: SignedMagicLink,
+        code: String,
         is_update: bool,
         now: TimestampMillis,
     ) -> AuthResult {
@@ -127,7 +128,11 @@ impl State {
             .get_signature_as_cbor(&magic_link.seed(), msg_hash, None)
             .is_ok()
         {
-            AuthResult::Success
+            if magic_link.code() == code {
+                AuthResult::Success
+            } else {
+                AuthResult::CodeIncorrect
+            }
         } else if !is_update {
             AuthResult::RequiresUpgrade
         } else {
@@ -188,5 +193,6 @@ pub enum AuthResult {
     Success,
     RequiresUpgrade,
     LinkExpired,
+    CodeIncorrect,
     LinkInvalid(String),
 }
