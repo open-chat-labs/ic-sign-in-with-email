@@ -1,21 +1,18 @@
 use crate::env;
-use candid::Principal;
 use email_sender_core::EmailSender;
-use magic_links::EncryptedMagicLink;
+use magic_links::SignedMagicLink;
 use sign_in_with_email_canister::EmailSenderConfig;
 use std::sync::OnceLock;
-use utils::ValidatedEmail;
 
 static EMAIL_SENDER: OnceLock<Box<dyn EmailSender>> = OnceLock::new();
 
-pub fn init_from_config(config: EmailSenderConfig, identity_canister_id: Principal) {
+pub fn init_from_config(config: EmailSenderConfig) {
     #[allow(unused_variables)]
     match config {
         EmailSenderConfig::Aws(aws) => {
             #[cfg(feature = "email_sender_aws")]
             {
                 init(email_sender_aws::AwsEmailSender::new(
-                    identity_canister_id,
                     aws.region,
                     aws.function_url,
                     aws.access_key,
@@ -35,11 +32,8 @@ pub fn init(email_sender: impl EmailSender + 'static) {
         .unwrap_or_else(|_| panic!("Email sender already set"));
 }
 
-pub async fn send_magic_link(
-    email: ValidatedEmail,
-    magic_link: EncryptedMagicLink,
-) -> Result<(), String> {
+pub async fn send_magic_link(magic_link: SignedMagicLink) -> Result<(), String> {
     let sender = EMAIL_SENDER.get().expect("Email sender has not been set");
 
-    sender.send(email.into(), magic_link, env::now()).await
+    sender.send(magic_link, env::now()).await
 }

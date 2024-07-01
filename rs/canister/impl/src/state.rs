@@ -4,14 +4,14 @@ use crate::{env, Hash};
 use canister_sig_util::signature_map::{SignatureMap, LABEL_SIG};
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::api::set_certified_data;
-use magic_links::SignedMagicLink;
+use magic_links::DoubleSignedMagicLink;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use serde::{Deserialize, Serialize};
 use sign_in_with_email_canister::{
     Delegation, EmailSenderConfig, SignedDelegation, TimestampMillis, NANOS_PER_MILLISECOND,
 };
 use std::cell::RefCell;
-use utils::{calculate_seed, delegation_signature_msg_hash, ValidatedEmail};
+use utils::{calculate_seed, delegation_signature_msg_hash};
 
 thread_local! {
     static STATE: RefCell<Option<State>> = RefCell::default();
@@ -83,8 +83,8 @@ impl State {
         self.rsa_private_key.as_ref().map(RsaPublicKey::from)
     }
 
-    pub fn rsa_private_key(&self) -> Option<&RsaPrivateKey> {
-        self.rsa_private_key.as_ref()
+    pub fn rsa_private_key(&self) -> Option<RsaPrivateKey> {
+        self.rsa_private_key.clone()
     }
 
     pub fn set_rsa_private_key(&mut self, private_key: RsaPrivateKey) {
@@ -105,27 +105,29 @@ impl State {
 
     pub fn process_auth_request(
         &mut self,
-        signed_magic_link: SignedMagicLink,
+        signed_magic_link: DoubleSignedMagicLink,
         code: String,
         is_update: bool,
         now: TimestampMillis,
     ) -> AuthResult {
-        let private_key = self.rsa_private_key.clone().unwrap();
+        if !signed_magic_link.verify_sigs(
+            self.rsa_public_key().unwrap(),
+            self.email_sender_rsa_public_key.clone(),
+        ) {
+            return AuthResult::LinkInvalid("Invalid signature".to_string());
+        };
 
-        let magic_link =
-            match signed_magic_link.unwrap(self.email_sender_rsa_public_key.clone(), private_key) {
-                Ok(m) => m,
-                Err(error) => return AuthResult::LinkInvalid(error),
-            };
+        let magic_link = signed_magic_link.magic_link;
 
         if magic_link.expired(now) {
             return AuthResult::LinkExpired;
         }
         let msg_hash = delegation_signature_msg_hash(magic_link.delegation());
+        let seed = self.calculate_seed(magic_link.email());
 
         if self
             .signature_map
-            .get_signature_as_cbor(&magic_link.seed(), msg_hash, None)
+            .get_signature_as_cbor(&seed, msg_hash, None)
             .is_ok()
         {
             if magic_link.code() == code {
@@ -136,11 +138,10 @@ impl State {
         } else if !is_update {
             AuthResult::RequiresUpgrade
         } else {
-            self.signature_map
-                .add_signature(&magic_link.seed(), msg_hash);
+            let seed = self.calculate_seed(magic_link.email());
+            self.signature_map.add_signature(&seed, msg_hash);
+            self.magic_links.mark_success(seed, msg_hash, now);
             self.update_root_hash();
-            self.magic_links
-                .mark_success(magic_link.seed(), msg_hash, now);
 
             AuthResult::Success
         }
@@ -173,7 +174,7 @@ impl State {
         );
     }
 
-    pub fn calculate_seed(&self, email: &ValidatedEmail) -> Hash {
+    pub fn calculate_seed(&self, email: &str) -> Hash {
         calculate_seed(self.salt.get(), email)
     }
 

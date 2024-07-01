@@ -1,11 +1,10 @@
-use magic_links::{generate_random_3digit_code, MagicLink, SignedMagicLink};
+use magic_links::{generate_random_3digit_code, DoubleSignedMagicLink, MagicLink};
 use rand::rngs::StdRng;
 use rand::{thread_rng, SeedableRng};
 use rsa::pkcs1::LineEnding;
 use rsa::pkcs8::EncodePublicKey;
 use rsa::RsaPrivateKey;
 use sign_in_with_email_canister::{Delegation, InitArgs, InitOrUpgradeArgs, TimestampNanos};
-use utils::ValidatedEmail;
 
 pub const TEST_SALT: [u8; 32] = [1; 32];
 pub const EMAIL_SENDER_RSA_SEED: [u8; 32] = [2; 32];
@@ -22,21 +21,18 @@ pub fn generate_magic_link(
     session_key: Vec<u8>,
     created: TimestampNanos,
     expiration: TimestampNanos,
-) -> SignedMagicLink {
-    let seed = utils::calculate_seed(
-        TEST_SALT,
-        &ValidatedEmail::try_from(email.to_string()).unwrap(),
-    );
+) -> DoubleSignedMagicLink {
     let delegation = Delegation {
         pubkey: session_key,
         expiration,
     };
     let code = generate_random_3digit_code(&mut thread_rng());
-    let magic_link = MagicLink::new(seed, delegation, code, created);
+    let magic_link = MagicLink::new(email.to_string(), delegation, code, created);
     let private_key = rsa_private_key();
-    let encrypted = magic_link.encrypt(private_key.to_public_key(), &mut thread_rng());
 
-    encrypted.sign(email_sender_rsa_private_key())
+    magic_link
+        .sign(private_key)
+        .sign(email_sender_rsa_private_key())
 }
 
 fn rsa_private_key() -> RsaPrivateKey {

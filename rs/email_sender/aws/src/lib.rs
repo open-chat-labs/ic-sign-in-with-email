@@ -6,14 +6,12 @@ use ic_cdk::api::management_canister::http_request::{
     TransformContext, TransformFunc,
 };
 use ic_cdk::query;
-use ic_principal::Principal;
-use magic_links::{EncryptedMagicLink, MagicLinkMessage};
+use magic_links::SignedMagicLink;
 use time::format_description::BorrowedFormatItem;
 use time::macros::format_description;
 use time::OffsetDateTime;
 
 pub struct AwsEmailSender {
-    identity_canister_id: Principal,
     region: String,
     function_url: String,
     access_key: String,
@@ -25,14 +23,12 @@ const LONG_DATETIME: &[BorrowedFormatItem] =
 
 impl AwsEmailSender {
     pub fn new(
-        identity_canister_id: Principal,
         region: String,
         function_url: String,
         access_key: String,
         secret_key: String,
     ) -> AwsEmailSender {
         AwsEmailSender {
-            identity_canister_id,
             region,
             function_url,
             access_key,
@@ -42,8 +38,7 @@ impl AwsEmailSender {
 
     fn build_args(
         &self,
-        email: String,
-        magic_link: EncryptedMagicLink,
+        magic_link: SignedMagicLink,
         now_millis: u64,
     ) -> CanisterHttpRequestArgument {
         let datetime =
@@ -51,13 +46,7 @@ impl AwsEmailSender {
 
         let host = self.function_url.trim_start_matches("https://");
         let url = format!("https://{host}");
-
-        let body = serde_json::to_string(&MagicLinkMessage {
-            email,
-            identity_canister_id: self.identity_canister_id,
-            magic_link,
-        })
-        .unwrap();
+        let body = serde_json::to_string(&magic_link).unwrap();
 
         let mut header_map = HeaderMap::new();
         header_map.insert(
@@ -116,13 +105,8 @@ impl AwsEmailSender {
 
 #[async_trait]
 impl EmailSender for AwsEmailSender {
-    async fn send(
-        &self,
-        email: String,
-        magic_link: EncryptedMagicLink,
-        now_millis: u64,
-    ) -> Result<(), String> {
-        let args = self.build_args(email, magic_link, now_millis);
+    async fn send(&self, magic_link: SignedMagicLink, now_millis: u64) -> Result<(), String> {
+        let args = self.build_args(magic_link, now_millis);
 
         let resp =
             ic_cdk::api::management_canister::http_request::http_request(args, 1_000_000_000)

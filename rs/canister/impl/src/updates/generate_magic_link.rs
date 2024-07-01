@@ -14,31 +14,35 @@ async fn generate_magic_link(args: GenerateMagicLinkArgs) -> GenerateMagicLinkRe
 
     let start = env::now();
 
-    let (magic_link, encrypted_magic_link) = state::read(|s| {
-        let seed = s.calculate_seed(&email);
+    let (signed_magic_link, seed) = state::read(|s| {
+        let seed = s.calculate_seed(email.as_str());
         let magic_link = rng::with_rng(|rng| {
-            magic_links::generate(seed, args.session_key, args.max_time_to_live, rng, start)
+            magic_links::generate(
+                email.to_string(),
+                args.session_key,
+                args.max_time_to_live,
+                rng,
+                start,
+            )
         });
-        let public_key = s.rsa_public_key().unwrap();
-        let encrypted = rng::with_rng(|rng| magic_link.encrypt(public_key, rng));
-
-        (magic_link, encrypted)
+        let rsa_private_key = s.rsa_private_key().unwrap();
+        (magic_link.sign(rsa_private_key), seed)
     });
 
-    if let Err(error) = email_sender::send_magic_link(email, encrypted_magic_link).await {
+    let delegation = signed_magic_link.magic_link.delegation().clone();
+    let code = signed_magic_link.magic_link.code().to_string();
+
+    if let Err(error) = email_sender::send_magic_link(signed_magic_link).await {
         FailedToSendEmail(error)
     } else {
-        let seed = magic_link.seed();
-        let delegation = magic_link.delegation();
-
         state::mutate(|s| {
-            s.record_magic_link_sent(seed, delegation, env::now());
+            s.record_magic_link_sent(seed, &delegation, env::now());
 
             Success(GenerateMagicLinkSuccess {
                 created: start,
                 user_key: s.der_encode_canister_sig_key(seed),
                 expiration: delegation.expiration,
-                code: magic_link.code().to_string(),
+                code,
             })
         })
     }

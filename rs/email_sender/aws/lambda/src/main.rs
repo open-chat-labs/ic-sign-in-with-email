@@ -4,7 +4,7 @@ use aws_lambda_events::sqs::SqsMessage;
 use aws_sdk_sesv2::types::builders::{DestinationBuilder, EmailContentBuilder, TemplateBuilder};
 use aws_sdk_sesv2::Client as SesClient;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use magic_links::MagicLinkMessage;
+use magic_links::SignedMagicLink;
 use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::RsaPrivateKey;
 use serde::Serialize;
@@ -47,16 +47,16 @@ async fn process_record(
 
     info!("Processing SQS Message: {body}");
 
-    let MagicLinkMessage {
-        email,
-        identity_canister_id: _,
-        magic_link,
-    } = serde_json::from_str(&body)?;
+    let magic_link: SignedMagicLink = serde_json::from_str(&body)?;
+    let email = magic_link.magic_link.email().to_string();
 
     let signed = magic_link.sign(rsa_private_key);
+
     let querystring = signed.build_querystring();
-    let magic_link = format!("https://oc.app/home{querystring}");
-    let template_data = TemplateData { magic_link };
+    let magic_link_url = format!("https://oc.app/home{querystring}");
+    let template_data = TemplateData {
+        magic_link: magic_link_url,
+    };
 
     match ses_client
         .send_email()

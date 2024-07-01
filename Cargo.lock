@@ -2091,6 +2091,7 @@ dependencies = [
  "hex",
  "ic_principal",
  "rand",
+ "rmp-serde",
  "rsa",
  "serde",
  "serde_json",

@@ -2,7 +2,7 @@ use crate::state::AuthResult;
 use crate::{env, get_query_param_value, state};
 use ic_cdk::{query, update};
 use ic_http_certification::{HttpRequest, HttpResponse};
-use magic_links::SignedMagicLink;
+use magic_links::DoubleSignedMagicLink;
 
 #[query]
 fn http_request(request: HttpRequest) -> HttpResponse {
@@ -23,17 +23,17 @@ fn handle_http_request(request: HttpRequest, update: bool) -> HttpResponse {
         "/auth" => {
             let query = request.get_query().unwrap().unwrap_or_default();
             let params = querystring::querify(&query);
-            let ciphertext = get_query_param_value(&params, "c").unwrap();
-            let encrypted_key = get_query_param_value(&params, "k").unwrap();
-            let nonce = get_query_param_value(&params, "n").unwrap();
-            let signature = get_query_param_value(&params, "s").unwrap();
-            let code = get_query_param_value(&params, "u").unwrap();
-
-            let signed_magic_link =
-                SignedMagicLink::from_hex_strings(&ciphertext, &encrypted_key, &nonce, &signature);
-
+            let magic_link_hex = get_query_param_value(&params, "m").unwrap();
+            let signature1_hex = get_query_param_value(&params, "s1").unwrap();
+            let signature2_hex = get_query_param_value(&params, "s2").unwrap();
+            let code = get_query_param_value(&params, "c").unwrap();
+            let magic_link = DoubleSignedMagicLink::from_hex_strings(
+                &magic_link_hex,
+                &signature1_hex,
+                &signature2_hex,
+            );
             let (status_code, body, upgrade) = match state::mutate(|s| {
-                s.process_auth_request(signed_magic_link, code, update, env::now())
+                s.process_auth_request(magic_link, code, update, env::now())
             }) {
                 AuthResult::Success => (
                     200,

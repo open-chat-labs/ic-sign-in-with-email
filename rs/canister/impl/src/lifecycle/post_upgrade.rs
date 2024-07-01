@@ -24,14 +24,14 @@ fn post_upgrade(args: InitOrUpgradeArgs) {
     if let Some(config) = upgrade_args.email_sender_config {
         let rsa_private_key = state
             .rsa_private_key()
-            .cloned()
+            .clone()
             .expect("RSA private key not set");
 
         state.set_email_sender_config(config.decrypt(&rsa_private_key));
     }
 
     if let Some(config) = state.email_sender_config().cloned() {
-        email_sender::init_from_config(config, env::canister_id());
+        email_sender::init_from_config(config);
     } else if state.test_mode() {
         email_sender::init(NullEmailSender::default());
     }
