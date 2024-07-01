@@ -1,14 +1,9 @@
 use async_trait::async_trait;
-use magic_links::EncryptedMagicLink;
+use magic_links::SignedMagicLink;
 
 #[async_trait]
 pub trait EmailSender: Send + Sync {
-    async fn send(
-        &self,
-        email: String,
-        magic_link: EncryptedMagicLink,
-        now_millis: u64,
-    ) -> Result<(), String>;
+    async fn send(&self, magic_link: SignedMagicLink, now_millis: u64) -> Result<(), String>;
 }
 
 #[derive(Default)]
@@ -16,12 +11,7 @@ pub struct NullEmailSender {}
 
 #[async_trait]
 impl EmailSender for NullEmailSender {
-    async fn send(
-        &self,
-        _email: String,
-        _magic_link: EncryptedMagicLink,
-        _now_millis: u64,
-    ) -> Result<(), String> {
+    async fn send(&self, _magic_link: SignedMagicLink, _now_millis: u64) -> Result<(), String> {
         Ok(())
     }
 }

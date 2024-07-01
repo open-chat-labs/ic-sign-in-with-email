@@ -48,7 +48,7 @@ fn end_to_end() {
     let http_request = HttpRequest {
         method: "GET".to_string(),
         url: format!(
-            "https://canister_id.icp0.io/auth{}&u={}",
+            "https://canister_id.icp0.io/auth{}&c={}",
             signed.build_querystring(),
             generate_magic_link_success.code
         ),

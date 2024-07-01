@@ -1,4 +1,4 @@
-use crate::hash::{hash_bytes, hash_of_map, hash_with_domain};
+use crate::hash::{hash_of_map, hash_with_domain};
 pub use crate::validated_email::ValidatedEmail;
 use sign_in_with_email_canister::{Delegation, Hash};
 use std::collections::HashMap;
@@ -6,12 +6,14 @@ use std::collections::HashMap;
 mod hash;
 mod validated_email;
 
-pub fn calculate_seed(salt: [u8; 32], email: &ValidatedEmail) -> [u8; 32] {
+pub use hash::hash_bytes;
+
+pub fn calculate_seed(salt: [u8; 32], email: &str) -> [u8; 32] {
     let mut bytes: Vec<u8> = vec![];
     bytes.push(salt.len() as u8);
     bytes.extend_from_slice(&salt);
 
-    let email_bytes = email.as_str().bytes();
+    let email_bytes = email.bytes();
     bytes.push(email_bytes.len() as u8);
     bytes.extend(email_bytes);
 
