@@ -167,8 +167,8 @@ impl DoubleSignedMagicLink {
     ) -> DoubleSignedMagicLink {
         DoubleSignedMagicLink {
             magic_link: MagicLink::deserialize(&string_to_hex(magic_link)),
-            signature1: string_to_hex(signature1).try_into().unwrap(),
-            signature2: string_to_hex(signature2).try_into().unwrap(),
+            signature1: string_to_hex(signature1),
+            signature2: string_to_hex(signature2),
         }
     }
 }
@@ -179,7 +179,7 @@ fn verify_sig(rsa_public_key: RsaPublicKey, msg: &[u8], signature: &[u8]) -> boo
     };
 
     let verifying_key: VerifyingKey<Sha256> = VerifyingKey::new(rsa_public_key);
-    verifying_key.verify(&msg, &rsa_signature).is_ok()
+    verifying_key.verify(msg, &rsa_signature).is_ok()
 }
 
 fn hex_to_string(bytes: &[u8]) -> String {
