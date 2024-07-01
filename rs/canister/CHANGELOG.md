@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Removed
+
+- Remove `http_request` endpoint ([#44](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/44))
+
 ## [[0.10.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.10.0)] - 2024-06-06
 
 ### Changed
