@@ -1,4 +1,4 @@
-# To build run 'docker build . -t openchat'
+# To build run 'docker build . -t sign_in_with_email'
 FROM ubuntu:22.04 as builder
 SHELL ["bash", "-c"]
 
