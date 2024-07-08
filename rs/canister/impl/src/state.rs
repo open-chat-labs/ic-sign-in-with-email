@@ -121,7 +121,10 @@ impl State {
 
         if magic_link.expired(now) {
             return AuthResult::LinkExpired;
+        } else if magic_link.code() != code {
+            return AuthResult::CodeIncorrect;
         }
+
         let msg_hash = delegation_signature_msg_hash(magic_link.delegation());
         let seed = self.calculate_seed(magic_link.email());
 
@@ -130,15 +133,10 @@ impl State {
             .get_signature_as_cbor(&seed, msg_hash, None)
             .is_ok()
         {
-            if magic_link.code() == code {
-                AuthResult::Success
-            } else {
-                AuthResult::CodeIncorrect
-            }
+            AuthResult::Success
         } else if !is_update {
             AuthResult::RequiresUpgrade
         } else {
-            let seed = self.calculate_seed(magic_link.email());
             self.signature_map.add_signature(&seed, msg_hash);
             self.magic_links.mark_success(seed, msg_hash, now);
             self.update_root_hash();

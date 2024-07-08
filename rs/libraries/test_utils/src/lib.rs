@@ -1,6 +1,6 @@
-use magic_links::{generate_random_3digit_code, DoubleSignedMagicLink, MagicLink};
+use magic_links::{DoubleSignedMagicLink, MagicLink};
 use rand::rngs::StdRng;
-use rand::{thread_rng, SeedableRng};
+use rand::SeedableRng;
 use rsa::pkcs1::LineEnding;
 use rsa::pkcs8::EncodePublicKey;
 use rsa::RsaPrivateKey;
@@ -21,12 +21,12 @@ pub fn generate_magic_link(
     session_key: Vec<u8>,
     created: TimestampNanos,
     expiration: TimestampNanos,
+    code: String,
 ) -> DoubleSignedMagicLink {
     let delegation = Delegation {
         pubkey: session_key,
         expiration,
     };
-    let code = generate_random_3digit_code(&mut thread_rng());
     let magic_link = MagicLink::new(email.to_string(), delegation, code, created);
     let private_key = rsa_private_key();
 

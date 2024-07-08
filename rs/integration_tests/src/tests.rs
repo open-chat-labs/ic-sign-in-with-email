@@ -43,6 +43,7 @@ fn end_to_end() {
         session_key.clone(),
         generate_magic_link_success.created,
         generate_magic_link_success.expiration,
+        generate_magic_link_success.code.clone(),
     );
 
     let http_request = HttpRequest {
