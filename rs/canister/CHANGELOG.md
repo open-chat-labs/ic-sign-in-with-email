@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Fixed
+
+- Fix code check not being performed in all scenarios ([#48](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/48))
+
 ## [[0.11.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.11.0)] - 2024-07-02
 
 ### Changed
