@@ -22,7 +22,7 @@ async fn function_handler(event: LambdaEvent<LambdaFunctionUrlRequest>) -> Resul
     sns_client
         .publish()
         .target_arn(target_arn)
-        .message(&event.payload.body.unwrap())
+        .message(event.payload.body.unwrap())
         .message_group_id("0")
         .send()
         .await?;
