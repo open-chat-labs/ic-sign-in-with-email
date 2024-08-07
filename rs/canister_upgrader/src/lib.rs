@@ -40,7 +40,7 @@ pub async fn upgrade_canister(
 
     management_canister
         .install(&canister_id, &wasm)
-        .with_arg(&InitOrUpgradeArgs::Upgrade(UpgradeArgs {
+        .with_arg(InitOrUpgradeArgs::Upgrade(UpgradeArgs {
             email_sender_public_key_pem,
             email_sender_config: Some(encrypted_config),
         }))
