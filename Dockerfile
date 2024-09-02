@@ -8,7 +8,7 @@ ARG rust_version=1.80.0
 
 ENV GIT_COMMIT_ID=$git_commit_id
 ENV TZ=UTC
-ENV DFX_VERSION=0.20.0
+ENV DFX_VERSION=0.22.0
 ENV PATH="/root/.local/share/dfx/bin:$PATH"
 ENV RUSTFLAGS=$rustflags
 
