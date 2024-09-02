@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+## [[0.13.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.13.0)] - 2024-09-02
+
+### Changed
+
+- Bump Rust to 1.80.0 ([#50](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/50))
+- Bump CDK, DFX and PocketIC to latest versions ([#51](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/51))
+
 ## [[0.12.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.12.0)] - 2024-07-08
 
 ### Fixed
