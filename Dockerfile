@@ -1,5 +1,5 @@
 # To build run 'docker build . -t sign_in_with_email'
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.04 AS builder
 SHELL ["bash", "-c"]
 
 ARG git_commit_id
