@@ -1,5 +1,5 @@
 use candid::Principal;
-use ic_agent::agent::http_transport::reqwest_transport::ReqwestHttpReplicaV2Transport;
+use ic_agent::agent::http_transport::ReqwestTransport;
 use ic_agent::identity::BasicIdentity;
 use ic_agent::{Agent, Identity};
 use ic_utils::interfaces::management_canister::builders::InstallMode;
@@ -44,9 +44,7 @@ pub async fn upgrade_canister(
             email_sender_public_key_pem,
             email_sender_config: Some(encrypted_config),
         }))
-        .with_mode(InstallMode::Upgrade {
-            skip_pre_upgrade: false,
-        })
+        .with_mode(InstallMode::Upgrade(None))
         .call_and_wait()
         .await
         .unwrap();
@@ -54,8 +52,7 @@ pub async fn upgrade_canister(
 
 async fn build_ic_agent(url: String, identity: Box<dyn Identity>) -> Agent {
     let mainnet = is_mainnet(&url);
-    let transport =
-        ReqwestHttpReplicaV2Transport::create(url).expect("Failed to create Reqwest transport");
+    let transport = ReqwestTransport::create(url).expect("Failed to create Reqwest transport");
     let timeout = std::time::Duration::from_secs(60 * 5);
 
     let agent = Agent::builder()
