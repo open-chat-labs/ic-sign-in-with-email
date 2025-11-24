@@ -2,6 +2,7 @@ use querystring::QueryParams;
 
 mod email_sender;
 mod env;
+mod guards;
 mod lifecycle;
 mod memory;
 mod model;

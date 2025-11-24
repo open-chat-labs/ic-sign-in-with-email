@@ -1,10 +1,11 @@
+use crate::guards::caller_is_whitelisted;
 use crate::{env, state};
 use candid::Principal;
 use canister_sig_util::CanisterSigPublicKey;
 use ic_cdk::query;
 use sign_in_with_email_canister::GetPrincipalArgs;
 
-#[query]
+#[query(guard = "caller_is_whitelisted")]
 fn get_principal(args: GetPrincipalArgs) -> Principal {
     state::read(|s| {
         if s.is_caller_whitelisted() {
