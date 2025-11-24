@@ -7,6 +7,9 @@ use sign_in_with_email_canister::GetPrincipalArgs;
 #[query]
 fn get_principal(args: GetPrincipalArgs) -> Principal {
     state::read(|s| {
+        if s.is_caller_whitelisted() {
+            ic_cdk::trap("Caller is not authorized");
+        }
         let seed = s.calculate_seed(&args.email);
         let canister_id = env::canister_id();
         let public_key = CanisterSigPublicKey::new(canister_id, seed.to_vec()).to_der();

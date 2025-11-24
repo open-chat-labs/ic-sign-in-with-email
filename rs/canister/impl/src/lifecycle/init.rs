@@ -16,7 +16,11 @@ fn init(args: InitOrUpgradeArgs) {
     .unwrap();
     let test_mode = init_args.salt.is_some();
 
-    state::init(State::new(email_sender_public_key, test_mode));
+    state::init(State::new(
+        email_sender_public_key,
+        init_args.whitelisted_principals,
+        test_mode,
+    ));
 
     if let Some(salt) = init_args.salt {
         email_sender::init(NullEmailSender::default());

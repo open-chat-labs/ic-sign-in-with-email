@@ -14,3 +14,7 @@ pub fn now_nanos() -> TimestampNanos {
 pub fn canister_id() -> Principal {
     ic_cdk::id()
 }
+
+pub fn caller() -> Principal {
+    ic_cdk::api::caller()
+}
