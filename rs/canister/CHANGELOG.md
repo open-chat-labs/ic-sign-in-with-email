@@ -1,9 +1,14 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+
+### Added
+
+- Add `get_principal endpoint` ([#54](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/54))
 
 ## [[0.13.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.13.0)] - 2024-09-02
 
@@ -32,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [[0.9.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.9.0)] - 2024-05-23
 
-### Added 
+### Added
 
 - Add an explicit endpoint for handling magic links ([#33](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/33))
 - Add `test_utils::generate_magic_link` to simplify tests ([#38](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/38))
@@ -53,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [[0.6.0](https://github.com/open-chat-labs/ic-sign-in-with-email/releases/tag/v0.6.0)] - 2024-05-08
 
-### Added 
+### Added
 
 - Add `email_sender_config` query endpoint ([#28](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/28))
 - Display outcome after clicking on magic link ([#29](https://github.com/open-chat-labs/ic-sign-in-with-email/pull/29))

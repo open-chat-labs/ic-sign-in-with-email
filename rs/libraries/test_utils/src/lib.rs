@@ -12,6 +12,7 @@ pub const EMAIL_SENDER_RSA_SEED: [u8; 32] = [2; 32];
 pub fn default_init_args() -> InitOrUpgradeArgs {
     InitOrUpgradeArgs::Init(InitArgs {
         email_sender_public_key_pem: email_sender_public_key_pem(),
+        whitelisted_principals: vec![],
         salt: Some(TEST_SALT),
     })
 }
